@@ -70,14 +70,6 @@ def get_transposed_data(dataset):
     new_data =  dict(sorted(new_data.items(), key=lambda item: len(item[1])))
     return new_data
 
-def result(data,minFreq,n):
-    freq_items = {}
-    frequents_candidates = {k: v for k,
-                            v in data.items() if (len(v)/n) >= minFreq}
-
-    freq_items = {k: len(v)/n for k, v in frequents_candidates.items()}
-
-
 
 def dfs(data,minFreq,n):
     frequents_candidates = {k: v for k, v in data.items() if (len(v)/n) >= minFreq}
@@ -90,6 +82,8 @@ def dfs(data,minFreq,n):
                 
                 new_key = set((x,) + (y,))
                 new_set = val1.intersection(val2)                
+                
+                # un souci à ce niveau pour correctement formater les clés du dict T
 
                 if ( (len(new_set)/n) >= minFreq) :
                     print(str(new_key) + " (" + str(len(new_set)/n) + ")")
