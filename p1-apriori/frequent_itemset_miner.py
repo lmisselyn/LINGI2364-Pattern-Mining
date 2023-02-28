@@ -1,4 +1,5 @@
 import sys
+from itertools import combinations
 
 """
 Skeleton file for the project 1 of the LINGI2364 course.
@@ -66,7 +67,36 @@ def get_transposed_data(dataset):
                 new_data[item].add(i)
             else:
                 new_data[item].add(i)
+    new_data =  dict(sorted(new_data.items(), key=lambda item: len(item[1])))
     return new_data
+
+def result(data,minFreq,n):
+    freq_items = {}
+    frequents_candidates = {k: v for k,
+                            v in data.items() if (len(v)/n) >= minFreq}
+
+    freq_items = {k: len(v)/n for k, v in frequents_candidates.items()}
+
+
+
+def dfs(data,minFreq,n):
+    frequents_candidates = {k: v for k, v in data.items() if (len(v)/n) >= minFreq}
+
+    for x, val1 in list(frequents_candidates.items()):
+        print
+        T = {}
+        for y, val2 in list(frequents_candidates.items()):
+            if(x!=y and len(val2)>len(val1)) :
+                
+                new_key = set((x,) + (y,))
+                new_set = val1.intersection(val2)                
+
+                if ( (len(new_set)/n) >= minFreq) :
+                    print(str(new_key) + " (" + str(len(new_set)/n) + ")")
+                    T[tuple(new_key)] = new_set
+        if len(T):
+            dfs(T,minFreq,n)
+
 
 
 def support(data, candidates, n, minFreq, file):
@@ -124,11 +154,18 @@ def apriori(filepath, minFrequency):
         candidates = generate_candidates(frequents_items)
         frequents_items = support(transposed_data, candidates, n_transactions, minFrequency, f)
     f.close()
+    return frequents_items
 
 def alternative_miner(filepath, minFrequency):
     """Runs the alternative frequent itemset mining algorithm on the specified file with the given minimum frequency"""
     # TODO: either second implementation of the apriori algorithm or implementation of the depth first search algorithm
-    print("Not implemented")
+    f = open("MySols/sol.dat", "w")
+    dataset = Dataset(filepath)
+    n_transactions = dataset.trans_num()
+    transposed_data = get_transposed_data(dataset)
+    result = dfs(transposed_data,minFrequency,n_transactions)
+    f.close()
+    return result
 
 
 '''
@@ -142,5 +179,5 @@ compute support on these new candidates and so on...
 '''
 
 if __name__ == '__main__':
-    apriori("Datasets/chess/chess.dat", 0.9)
+   print(alternative_miner("Datasets/chess/chess.dat", 0.8))
 
