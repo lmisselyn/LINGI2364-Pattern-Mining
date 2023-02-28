@@ -71,16 +71,19 @@ def get_transposed_data(dataset):
     return new_data
 
 
-def dfs(data,minFreq,n):
+def dfs(data,minFreq,n,file):
+
     frequents_candidates = {k: v for k, v in data.items() if (len(v)/n) >= minFreq}
+    
+    for i, j in list(frequents_candidates.items()):
+        file.write(str([i]) + " (" + str(len(j)/n) + ")\n")
 
     for x, val1 in list(frequents_candidates.items()):
-        print
         T = {}
         for y, val2 in list(frequents_candidates.items()):
             if(x!=y and len(val2)>len(val1)) :
                 
-                new_key = set((x,) + (y,))
+                new_key = list([x,y])
                 new_set = val1.intersection(val2)                
                 
                 # un souci à ce niveau pour correctement formater les clés du dict T
@@ -89,7 +92,7 @@ def dfs(data,minFreq,n):
                     print(str(new_key) + " (" + str(len(new_set)/n) + ")")
                     T[tuple(new_key)] = new_set
         if len(T):
-            dfs(T,minFreq,n)
+            dfs(T,minFreq,n,file)
 
 
 
@@ -157,7 +160,7 @@ def alternative_miner(filepath, minFrequency):
     dataset = Dataset(filepath)
     n_transactions = dataset.trans_num()
     transposed_data = get_transposed_data(dataset)
-    result = dfs(transposed_data,minFrequency,n_transactions)
+    result = dfs(transposed_data,minFrequency,n_transactions,f)
     f.close()
     return result
 
