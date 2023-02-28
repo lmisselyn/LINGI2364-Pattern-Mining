@@ -53,8 +53,6 @@ class Dataset:
         return self.transactions[i]
 
 
-
-
 def get_transposed_data(dataset):
     """
     return a dictionnary where keys are items and values are sets
@@ -69,38 +67,36 @@ def get_transposed_data(dataset):
                 new_data[item].add(i)
             else:
                 new_data[item].add(i)
-    new_data =  dict(sorted(new_data.items(), key=lambda item: len(item[1])))
+    new_data = dict(sorted(new_data.items(), key=lambda item: len(item[1])))
     return new_data
 
 
-def dfs(data,minFreq,n,file):
+def dfs(data, minFreq, n, file, visited=set()):
+    frequents_candidates = {k: v for k,
+                            v in data.items() if (len(v)/n) >= minFreq}
+    for i in frequents_candidates.keys():
+        visited.add(i)
 
-    frequents_candidates = {k: v for k, v in data.items() if (len(v)/n) >= minFreq}
-    
     for i, j in list(frequents_candidates.items()):
-        if type(i) == int :
+        if type(i) == int:
             file.write(str([i]) + " (" + str(len(j)/n) + ")\n")
-        else :
+        else:
             file.write(str(list(i)) + " (" + str(len(j)/n) + ")\n")
-        
 
     for x, val1 in list(frequents_candidates.items()):
         T = {}
         for y, val2 in list(frequents_candidates.items()):
-            if(x!=y and len(val2)>len(val1)) :
-                if type(x) == int :
-                    new_key = (x,y)
+            if(x != y and len(val2) >= len(val1)):
+                if type(x) == int:
+                    new_key = tuple(sorted(list((x, y))))
                 else:
-                    new_key = tuple(set(i for i in x).union(set(j for j in y)))
-                new_set = val1.intersection(val2)                
-                
-                if ( (len(new_set)/n) >= minFreq) :
-                    print(str(list(new_key)) + " (" + str(len(new_set)/n) + ")")
+                    new_key = tuple(sorted(list(set(i for i in x).union(set(j for j in y)))))
+                new_set = val1.intersection(val2)
+
+                if ((len(new_set)/n) >= minFreq) and new_key not in visited:
                     T[new_key] = new_set
         if len(T):
-            dfs(T,minFreq,n,file)
-
-
+            dfs(T, minFreq, n, file)
 
 def support(data, candidates, n, minFreq, file):
     frequents_candidates = []
@@ -152,12 +148,15 @@ def apriori(filepath, minFrequency):
     n_transactions = dataset.trans_num()
     transposed_data = get_transposed_data(dataset)
     candidates = transposed_data.keys()
-    frequents_items = support(transposed_data, candidates, n_transactions, minFrequency, f)
+    frequents_items = support(
+        transposed_data, candidates, n_transactions, minFrequency, f)
     while len(frequents_items) > 2:
         candidates = generate_candidates(frequents_items)
-        frequents_items = support(transposed_data, candidates, n_transactions, minFrequency, f)
+        frequents_items = support(
+            transposed_data, candidates, n_transactions, minFrequency, f)
     f.close()
     return frequents_items
+
 
 def alternative_miner(filepath, minFrequency):
     """Runs the alternative frequent itemset mining algorithm on the specified file with the given minimum frequency"""
@@ -166,7 +165,7 @@ def alternative_miner(filepath, minFrequency):
     dataset = Dataset(filepath)
     n_transactions = dataset.trans_num()
     transposed_data = get_transposed_data(dataset)
-    result = dfs(transposed_data,minFrequency,n_transactions,f)
+    result = dfs(transposed_data, minFrequency, n_transactions, f)
     f.close()
     return result
 
@@ -182,5 +181,4 @@ compute support on these new candidates and so on...
 '''
 
 if __name__ == '__main__':
-   print(alternative_miner("Datasets/chess/chess.dat", 0.8))
-
+   alternative_miner("Datasets/mushroom/mushroom.dat", 0.5)

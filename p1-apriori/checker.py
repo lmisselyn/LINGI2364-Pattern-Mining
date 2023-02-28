@@ -41,7 +41,7 @@ def compare_solution_files(expected_file, actual_file):
                 print(f"(Showed {len(to_show)} out of {len(excess)})")
 
 if __name__ == '__main__':
-    compare_solution_files("MySols/sol.dat", "solutions/chess/chess_0.8")
+    compare_solution_files("solutions/mushroom/mushroom_0.5", "MySols/sol.dat")
     if len(sys.argv) != 3:
         print("Usage: python checker.py path/to/expected path/to/actual")
         sys.exit(1)
