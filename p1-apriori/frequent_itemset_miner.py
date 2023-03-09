@@ -1,5 +1,7 @@
 import sys
-from itertools import combinations
+import pandas as pd
+import time
+import matplotlib.pyplot as plt
 
 """
 Skeleton file for the project 1 of the LINGI2364 course.
@@ -17,7 +19,7 @@ according to the minimum frequency given. Each itemset has to be printed on one 
 
 Do not change the signature of the apriori and alternative_miner methods as they will be called by the test script.
 
-__authors__ = "<write here your group, first name(s) and last name(s)>"
+__authors__ = "<Group 30, Patrick Tchoupe & Misselyn Lambert>"
 """
 
 
@@ -67,22 +69,22 @@ def get_transposed_data(dataset):
                 new_data[item].add(i)
             else:
                 new_data[item].add(i)
-    new_data = dict(sorted(new_data.items(), key=lambda item: len(item[1])))
     return new_data
 
 
-def dfs(data, minFreq, n, file, visited=set()):
+def dfs(data, minFreq, n, visited=set()):
+
     frequents_candidates = {k: v for k,
                             v in data.items() if (len(v)/n) >= minFreq}
     for i in frequents_candidates.keys():
         visited.add(i)
 
-    for i, j in list(frequents_candidates.items()):
+    """ for i, j in list(frequents_candidates.items()):
         if type(i) == int:
-            file.write(str([i]) + " (" + str(len(j)/n) + ")\n")
+            print(str([i]) + " (" + str(len(j)/n) + ")\n")
         else:
-            file.write(str(list(i)) + " (" + str(len(j)/n) + ")\n")
-
+            print(str(list(i)) + " (" + str(len(j)/n) + ")\n")
+ """
     for x, val1 in list(frequents_candidates.items()):
         T = {}
         for y, val2 in list(frequents_candidates.items()):
@@ -90,15 +92,17 @@ def dfs(data, minFreq, n, file, visited=set()):
                 if type(x) == int:
                     new_key = tuple(sorted(list((x, y))))
                 else:
-                    new_key = tuple(sorted(list(set(i for i in x).union(set(j for j in y)))))
+                    new_key = tuple(
+                        sorted(list(set(i for i in x).union(set(j for j in y)))))
                 new_set = val1.intersection(val2)
 
                 if ((len(new_set)/n) >= minFreq) and new_key not in visited:
                     T[new_key] = new_set
         if len(T):
-            dfs(T, minFreq, n, file)
+            dfs(T, minFreq, n)
 
-def support(data, candidates, n, minFreq, file):
+
+def support(data, candidates, n, minFreq):
     frequents_candidates = []
 
     for c in candidates:
@@ -106,8 +110,8 @@ def support(data, candidates, n, minFreq, file):
             freq = len(data[c]) / n
             if freq >= minFreq:
                 frequents_candidates.append(c)
-                print(str([c]) + " (" + str(freq) + ")")
-                file.write(str([c]) + " (" + str(freq) + ")\n")
+                #print(str([c]) + " (" + str(freq) + ")")
+                #file.write(str([c]) + " (" + str(freq) + ")\n")
 
         else:
             intersec = data[c[0]]
@@ -116,8 +120,8 @@ def support(data, candidates, n, minFreq, file):
             freq = len(intersec) / n
             if freq >= minFreq:
                 frequents_candidates.append(c)
-                print(str(c) + " (" + str(freq) + ")")
-                file.write(str(c) + " (" + str(freq) + ")\n")
+                #print(str(c) + " (" + str(freq) + ")")
+                #file.write(str(c) + " (" + str(freq) + ")\n")
     return frequents_candidates
 
 
@@ -143,30 +147,26 @@ def generate_candidates(itemsets):
 
 def apriori(filepath, minFrequency):
     """Runs the apriori algorithm on the specified file with the given minimum frequency"""
-    f = open("MySols/sol.dat", "w")
     dataset = Dataset(filepath)
     n_transactions = dataset.trans_num()
     transposed_data = get_transposed_data(dataset)
     candidates = transposed_data.keys()
     frequents_items = support(
-        transposed_data, candidates, n_transactions, minFrequency, f)
+        transposed_data, candidates, n_transactions, minFrequency)
     while len(frequents_items) > 2:
         candidates = generate_candidates(frequents_items)
         frequents_items = support(
-            transposed_data, candidates, n_transactions, minFrequency, f)
-    f.close()
+            transposed_data, candidates, n_transactions, minFrequency)
     return frequents_items
 
 
 def alternative_miner(filepath, minFrequency):
     """Runs the alternative frequent itemset mining algorithm on the specified file with the given minimum frequency"""
     # TODO: either second implementation of the apriori algorithm or implementation of the depth first search algorithm
-    f = open("MySols/sol.dat", "w")
     dataset = Dataset(filepath)
     n_transactions = dataset.trans_num()
     transposed_data = get_transposed_data(dataset)
-    result = dfs(transposed_data, minFrequency, n_transactions, f)
-    f.close()
+    result = dfs(transposed_data, minFrequency, n_transactions)
     return result
 
 
@@ -180,5 +180,50 @@ generate next candidates (itemsets of size 2) with the previous itemsets
 compute support on these new candidates and so on...
 '''
 
+
 if __name__ == '__main__':
-   alternative_miner("Datasets/mushroom/mushroom.dat", 0.5)
+    dataset = [
+        "Datasets/mushroom/mushroom.dat",
+        "Datasets/chess/chess.dat",
+        "Datasets/accidents/accidents.dat",
+    ]
+    min_support = [1.0, 0.95, 0.9, 0.8, 0.85]
+    """ frame1  = pd.DataFrame(columns=["Function","File","Support","Execution time"])
+    for ds in dataset :
+        for supp in min_support :
+                # Example of search
+            start_timer = time.perf_counter()
+            apriori(ds, supp)
+            end_timer = time.perf_counter()
+            obj1 = {"Function":"Apriori","File": ds,"Support": supp,"Execution time":end_timer - start_timer}
+
+            frame1 = frame1.append(obj1, ignore_index=True)
+    frame1.to_csv("result.csv") """
+
+    """ frame2  = pd.DataFrame(columns=["Function","File","Support","Execution time"])
+    for ds in dataset :
+        for supp in min_support :
+                # Example of search
+            start_timer = time.perf_counter()
+            alternative_miner(ds, supp)
+            end_timer = time.perf_counter()
+            obj2 = {"Function":"Apriori","File": ds,"Support": supp,"Execution time":end_timer - start_timer}
+
+            frame2 = frame2.append(obj2, ignore_index=True)
+    frame2.to_csv("result2.csv") """
+
+    
+    frame = pd.read_csv("experiments.csv")
+
+    pivot = pd.pivot_table(frame, values='Execution time', index=[
+                           'File', 'Support'], columns=['Function'])
+
+    # Créer un graphique en barres pour chaque fichier et support
+    for file in frame['File'].unique():
+        fig, ax = plt.subplots()
+        pivot.loc[file].plot.bar(ax=ax)
+        ax.set_xlabel('Minimum frequency')
+        ax.set_ylabel('Execution time')
+        ax.set_title(
+            'Execution time for each function - ' + file)
+        plt.show()
