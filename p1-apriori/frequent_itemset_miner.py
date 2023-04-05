@@ -73,7 +73,7 @@ def get_transposed_data(dataset):
 
 
 def dfs(data, minFreq, n, visited=set()):
-
+    #Rajouter le tri en ordre croissant ici
     frequents_candidates = {k: v for k,
                             v in data.items() if (len(v)/n) >= minFreq}
     for i in frequents_candidates.keys():
@@ -188,6 +188,27 @@ if __name__ == '__main__':
         "Datasets/accidents/accidents.dat",
     ]
     min_support = [1.0, 0.95, 0.9, 0.8, 0.85]
+    frame = pd.DataFrame(
+        columns=["Function", "File", "Support", "Execution time"])
+    for supp in min_support:
+        # Example of search
+        start_timer = time.perf_counter()
+        apriori("Datasets/retail/retail.dat", supp)
+        end_timer = time.perf_counter()
+        obj1 = {"Function": "Apriori", "File": "retail", "Support": supp,
+                "Execution time": end_timer - start_timer}
+
+        frame = frame.append(obj1, ignore_index=True)
+    for supp in min_support:
+        # Example of search
+        start_timer = time.perf_counter()
+        alternative_miner("Datasets/retail/retail.dat", supp)
+        end_timer = time.perf_counter()
+        obj1 = {"Function": "ECLAT", "File": "retail", "Support": supp,
+                "Execution time": end_timer - start_timer}
+
+        frame = frame.append(obj1, ignore_index=True)
+
     """ frame1  = pd.DataFrame(columns=["Function","File","Support","Execution time"])
     for ds in dataset :
         for supp in min_support :
@@ -213,8 +234,9 @@ if __name__ == '__main__':
     frame2.to_csv("result2.csv") """
 
     
-    frame = pd.read_csv("experiments.csv")
-
+    #frame = pd.read_csv("experiments.csv")
+    #print(frame[frame["Function"]=="Apriori"])
+    print(frame)
     pivot = pd.pivot_table(frame, values='Execution time', index=[
                            'File', 'Support'], columns=['Function'])
 
