@@ -1,4 +1,5 @@
 import sys
+import operator
 #from sklearn.tree import DecisionTreeClassifier
 # from sklearn.metrics import accuracy_score
 
@@ -8,40 +9,42 @@ class Spade:
         self.pos_transactions = get_transactions(pos_filepath)
         self.neg_transactions = get_transactions(neg_filepath)
         self.k = k
-        
+    
     # Feel free to add parameters to this method
-    def dfs(self,repr,minFreq,visited=set()):
-        #Rajouter le tri en ordre croissant ici et ajuster la fonction pour check l'ordre d'apparition
-        
+    def dfs(self,repr,visited=set()):
+        freq_seqs = {}
         frequents_candidates = {k: v for k,
-                                v in repr.items() if (len(v)) >= minFreq}
+                                v in repr.items() if (len(v)) >= 2}
         for i in frequents_candidates.keys():
             visited.add(i)
 
         for i, j in list(frequents_candidates.items()):
             if type(i) == str:
-                print(i + str(j)+"\n")
+                freq_seqs[tuple(i)] = len(
+                    set([t[0] for t in j]))
             else:
-                print(str(i) + str(j)+"\n")
+                freq_seqs[tuple(i)] = len(
+                    set([t[0] for t in j]))
 
-        for x, val1 in list(frequents_candidates.items()):
+        for x, val1 in sorted(list(frequents_candidates.items())):
             T = {}
-            for y, val2 in list(frequents_candidates.items()):
+            for y, val2 in sorted(list(frequents_candidates.items())):
                 tmp=[]
-                if x != y:
-                    for t,n in val1:
-                        for k,l in val2:
-                            if t==k and l>n :
-                                if tmp.count((k,l))==0:
-                                    tmp.append((k,l))
-                    if type(x) == str:
-                        new_key = tuple((x, y))
-                    else:
-                        new_key = list(i for i in x).extend(list(j for j in y))
-                    if len(tmp):
-                        T[new_key] = tmp
+                
+                for t,n in val1:
+                    for k,l in val2:
+                        if t==k and l>n :
+                            if tmp.count((k,l))==0:
+                                tmp.append((k,l))
+                if type(x) == str:
+                    new_key = tuple((x, y))
+                else:
+                    new_key = tuple(list(i for i in x) + list(j for j in y))
+                if len(tmp):
+                    T[new_key] = tmp
             if len(T):
-                self.dfs(T, minFreq)
+                freq_seqs.update(self.dfs(T, visited))
+        return freq_seqs
     def get_transposed_data(self,dataset):
         """
         return a dictionnary where keys are items and values are sets
@@ -119,12 +122,51 @@ def spade_repr_from_transaction(transactions):
     return {'repr': spade_repr, 'covers': covers}
     return projected, cover 
 
-if __name__ == '__main__':
+
+def add_supports(d1, d2):
+    result = {}
+    for seq in set(d1.keys()).intersection(set(d2.keys())):
+        val1 = d1.get(seq, 0)
+        val2 = d2.get(seq, 0)
+        result[seq] = val1 + val2
+    return result
+
+def most_frequent(my_dict,pos,neg,k):
+
+        # trier le dictionnaire par valeur (fréquence)
+    sorted_dict = sorted(my_dict.items(), key=operator.itemgetter(1), reverse=True)
+
+    # filtrer les k éléments les plus fréquents
+    most_frequent = sorted_dict[:k]
+
+    # filtrer tous les autres éléments ayant le même support que le k-ème élément
+    if k < len(sorted_dict):
+        last_freq = most_frequent[-1][1]
+        same_freq = [item for item in sorted_dict[k:] if item[1] == last_freq]
+        most_frequent += same_freq
+
+    # afficher les k éléments les plus fréquents et tous les autres éléments ayant le même support
+    for key, value in most_frequent:
+        print(list(key),pos[key], neg[key], value)
+
+
+def main():
     pos_filepath = sys.argv[1]
     neg_filepath = sys.argv[2]
     k = int(sys.argv[3])
     s = Spade(pos_filepath, neg_filepath, k)
+
     transac = spade_repr_from_transaction(s.pos_transactions)['repr']
     freq = spade_repr_from_transaction(s.pos_transactions)['covers']
-    s.dfs(transac,10)
-    #print(spade_repr_from_transaction(s.pos_transactions))
+    pos = s.dfs(transac)
+    #print(pos)
+    transac1 = spade_repr_from_transaction(s.neg_transactions)['repr']
+    freq1 = spade_repr_from_transaction(s.neg_transactions)['covers']
+    neg = s.dfs(transac1)
+
+
+    result = add_supports(neg, pos)
+    most_frequent(result, pos, neg, k)
+
+if __name__ == '__main__':
+    main()
