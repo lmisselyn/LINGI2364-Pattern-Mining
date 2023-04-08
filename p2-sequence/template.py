@@ -14,18 +14,19 @@ class Spade:
         frequents = []
         pos = spade_repr_from_transaction(self.pos_transactions)
         neg = spade_repr_from_transaction(self.neg_transactions)
-        # Compute the support of different symbols
+        # Compute the support of different symbols and sort them
         symbol_support = get_symbols_support(pos['covers'], neg['covers'])
         sorted_symbols = sorted(symbol_support, key=lambda i: symbol_support[i][2])
 
-        if len(sorted_symbols) > 2*self.k:
-            sorted_symbols = sorted_symbols[:2*self.k]
-
+        # Build all the patterns
         for symb in sorted_symbols:
             for symb2 in sorted_symbols:
                 frequents.append(([symb, symb2],
                                   pos['repr'][symb] if symb in pos['repr'] else [],
                                   neg['repr'][symb] if symb in neg['repr'] else []))
+        print(frequents)
+
+        min_score = 100000
 
         while len(frequents) > 0:
             item = frequents.pop()
@@ -34,12 +35,17 @@ class Spade:
             pos_supp = get_support_from_pos(pos_positions)
             neg_supp = get_support_from_pos(neg_positions)
 
+            # Keep track of the minimum score during search
+            if pos_supp+neg_supp < min_score:
+                min_score = pos_supp+neg_supp
+
             if neg_supp + pos_supp > 0:
                 strItem = item_str(item[0])
                 symbol_support[strItem] = [pos_supp, neg_supp, pos_supp + neg_supp]
                 for symb in sorted_symbols:
-                    item[0].append(symb)
-                    frequents.append((item[0], pos_positions, neg_positions))
+                    new_symbol = item[0].copy()
+                    new_symbol.append(symb)
+                    frequents.append((new_symbol, pos_positions, neg_positions))
         sorted_result = sorted(symbol_support.items(), key=lambda i: -i[1][2])
         final_result = []
         previous_support = 0
@@ -125,6 +131,10 @@ def spade_repr_from_transaction(transactions):
 
 
 def get_symbols_support(pos_cover, neg_cover):
+    """
+    Compute the total support of each symbol
+    appearing in pos and neg files.
+    """
     symbols_support = {}
     for symbol in pos_cover.keys():
         supp = len(pos_cover[symbol])
@@ -177,13 +187,13 @@ def print_result(res):
 
 
 if __name__ == '__main__':
-    pos_filepath = sys.argv[1]
-    neg_filepath = sys.argv[2]
-    k = int(sys.argv[3])
+    #pos_filepath = sys.argv[1]
+    #neg_filepath = sys.argv[2]
+    #k = int(sys.argv[3])
     #pos_filepath = 'datasets/Reuters_small/positive_earn_small.txt'
     #neg_filepath = 'datasets/Reuters_small/negative_acq_small.txt'
-    #pos_filepath = 'datasets/Test/positive.txt'
-    #neg_filepath = 'datasets/Test/negative.txt'
-    #k = int(5)
+    pos_filepath = 'datasets/Test/positive.txt'
+    neg_filepath = 'datasets/Test/negative.txt'
+    k = int(3)
     s = Spade(pos_filepath, neg_filepath, k)
     s.min_top_k()
