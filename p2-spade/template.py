@@ -30,7 +30,6 @@ class Spade:
             T = {}
             for y, val2 in sorted(list(frequents_candidates.items())):
                 tmp=[]
-                
                 for t,n in val1:
                     for k,l in val2:
                         if t==k and l>n :
@@ -135,18 +134,13 @@ def most_frequent(my_dict,pos,neg,k):
 
         # trier le dictionnaire par valeur (fréquence)
     sorted_dict = sorted(my_dict.items(), key=operator.itemgetter(1), reverse=True)
+    val = sorted(set([j for i, j in my_dict.items()]), reverse=True)[:k][-1]
 
     # filtrer les k éléments les plus fréquents
-    most_frequent = sorted_dict[:k]
-
-    # filtrer tous les autres éléments ayant le même support que le k-ème élément
-    if k < len(sorted_dict):
-        last_freq = most_frequent[-1][1]
-        same_freq = [item for item in sorted_dict[k:] if item[1] == last_freq]
-        most_frequent += same_freq
+    most_frequent = {key: value for key, value in my_dict.items() if value >= val}
 
     # afficher les k éléments les plus fréquents et tous les autres éléments ayant le même support
-    for key, value in most_frequent:
+    for key, value in most_frequent.items():
         print(list(key),pos[key], neg[key], value)
 
 
