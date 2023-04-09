@@ -16,18 +16,35 @@ class Spade:
         neg = spade_repr_from_transaction(self.neg_transactions)
         # Compute the support of different symbols and sort them
         symbol_support = get_symbols_support(pos['covers'], neg['covers'])
-        sorted_symbols = sorted(symbol_support, key=lambda i: symbol_support[i][2])
+        sorted_symbols = sorted(symbol_support, key=lambda i: -symbol_support[i][2])
 
-        # Build all the patterns
-        for symb in sorted_symbols:
-            for symb2 in sorted_symbols:
+        # Prune base symbols
+        #best_symbols = sorted_symbols[:self.k]
+        #min_score = symbol_support[best_symbols[-1]][2]
+
+        min_score = symbol_support[sorted_symbols[0]][2]/self.k
+        index = 0
+        for s in sorted_symbols:
+            if symbol_support[s][2] < min_score:
+                break
+            index += 1
+        best_symbols = sorted_symbols[:index]
+
+
+
+        # Build patterns of size 2
+        for symb in best_symbols:
+            for symb2 in best_symbols:
                 frequents.append(([symb, symb2],
                                   pos['repr'][symb] if symb in pos['repr'] else [],
                                   neg['repr'][symb] if symb in neg['repr'] else []))
-        print(frequents)
 
-        min_score = 100000
 
+
+
+
+
+        # DFS
         while len(frequents) > 0:
             item = frequents.pop()
             pos_positions = find_sub_sequence(item[0], item[1], self.pos_transactions)
@@ -35,36 +52,38 @@ class Spade:
             pos_supp = get_support_from_pos(pos_positions)
             neg_supp = get_support_from_pos(neg_positions)
 
-            # Keep track of the minimum score during search
-            if pos_supp+neg_supp < min_score:
-                min_score = pos_supp+neg_supp
 
-            if neg_supp + pos_supp > 0:
+            # Keep track of the minimum score during search
+
+
+            if neg_supp + pos_supp >= min_score:
                 strItem = item_str(item[0])
                 symbol_support[strItem] = [pos_supp, neg_supp, pos_supp + neg_supp]
-                for symb in sorted_symbols:
+                for symb in best_symbols:
                     new_symbol = item[0].copy()
                     new_symbol.append(symb)
                     frequents.append((new_symbol, pos_positions, neg_positions))
         sorted_result = sorted(symbol_support.items(), key=lambda i: -i[1][2])
         final_result = []
         previous_support = 0
+        # Return top k patterns
+        # All patterns with the same score worth for 1 k
         for item in sorted_result:
             if self.k != 0:
                 if item[1][2] != previous_support:
                     if previous_support != 0:
                         self.k -= 1
                     if self.k == 0:
-                        print_result(final_result)
+                        print_ressult2(final_result)
                         return final_result
                     previous_support = item[1][2]
                     final_result.append(item)
                 else:
                     final_result.append(item)
             else:
-                print_result(final_result)
+                print_ressult2(final_result)
                 return final_result
-        print_result(final_result)
+        print_ressult2(final_result)
         return final_result
 
     def get_feature_matrices(self):
@@ -85,7 +104,7 @@ class Spade:
             neg_train_set = {i for i in range(len(self.neg_transactions)) if
                              i < fold * neg_fold_size or i >= (fold + 1) * neg_fold_size}
 
-            self.mine_top_k()
+            self.min_top_k()
 
             m = self.get_feature_matrices()
             classifier = tree.DecisionTreeClassifier(random_state=1)
@@ -97,6 +116,9 @@ class Spade:
 
 
 def get_transactions(filepath):
+    """
+    Return the list of transactions ine the file
+    """
     transactions = []
     with open(filepath) as f:
         new_transaction = True
@@ -151,6 +173,10 @@ def get_symbols_support(pos_cover, neg_cover):
 
 
 def get_support_from_pos(positions):
+    """
+    Return the support of a pattern based on its positions
+    int the transactions. Max 1 support by transaction.
+    """
     transaction = []
     supp = 0
     for pos in positions:
@@ -161,6 +187,10 @@ def get_support_from_pos(positions):
 
 
 def find_sub_sequence(item, positions, transactions):
+    """
+    Return the positions in the transactions where the
+    pattern (item) appears.
+    """
     new_positions = []
     for pos in positions:
         seq = transactions[pos[0]]
@@ -176,24 +206,36 @@ def item_str(item):
     for i in range(len(item)):
         s += str(item[i])
         if i != len(item) - 1:
-            s += ','
+            s += ', '
     return s
+
+
+def print_ressult2(res):
+    for r in res:
+        symb = r[0]
+        print('['+ symb + ']' + ' ' + str(r[1][0]) + ' ' + str(r[1][1]) + ' ' + str(r[1][2]))
 
 
 def print_result(res):
     for r in res:
-        symb = r[0].split(',')
-        print(str(symb) + ' '+ str(r[1][0]) + ' ' + str(r[1][1]) + ' ' + str(r[1][2]))
+        symb = '['
+        for i in range(len(r[0])):
+            if r[0][i] != ',':
+                if i != len(r[0]) - 1:
+                    symb += r[0][i] + ', '
+                else:
+                    symb += r[0][i] + ']'
+        print(symb + ' ' + str(r[1][0]) + ' ' + str(r[1][1]) + ' ' + str(r[1][2]))
 
 
 if __name__ == '__main__':
-    #pos_filepath = sys.argv[1]
-    #neg_filepath = sys.argv[2]
-    #k = int(sys.argv[3])
+    pos_filepath = sys.argv[1]
+    neg_filepath = sys.argv[2]
+    k = int(sys.argv[3])
     #pos_filepath = 'datasets/Reuters_small/positive_earn_small.txt'
     #neg_filepath = 'datasets/Reuters_small/negative_acq_small.txt'
-    pos_filepath = 'datasets/Test/positive.txt'
-    neg_filepath = 'datasets/Test/negative.txt'
-    k = int(3)
+    #pos_filepath = 'datasets/Test/positive.txt'
+    #neg_filepath = 'datasets/Test/negative.txt'
+    #k = int(7)
     s = Spade(pos_filepath, neg_filepath, k)
     s.min_top_k()
