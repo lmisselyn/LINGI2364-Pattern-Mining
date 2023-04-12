@@ -14,36 +14,41 @@ class Spade:
     def dfs(self,repr,visited=set()):
         freq_seqs = {}
         frequents_candidates = {k: v for k,
-                                v in repr.items() if (len(v)) >= 2}
-        for i in frequents_candidates.keys():
-            visited.add(i)
+                                v in repr.items() if (len(
+                                    set([t[0] for t in v]))) >= 2}
+        F2 = {}
+        for x, val1 in frequents_candidates.items():
+            for y, val2 in frequents_candidates.items():
+                tmp = []
+                for t, n in val1:
+                    for k, l in val2:
+                        if t == k and l > n:
+                            if tmp.count((k, l)) == 0:
+                                tmp.append((k, l))
+                if len(tmp): 
+                    F2[(x,y)] = tmp            
+        F2 = {k: v for k, v in F2.items() if (len(
+            set([t[0] for t in v]))) >= 2}
+        return self.enum_seq(F2)
 
-        for i, j in list(frequents_candidates.items()):
-            if type(i) == str:
-                freq_seqs[tuple(i)] = len(
-                    set([t[0] for t in j]))
-            else:
-                freq_seqs[tuple(i)] = len(
-                    set([t[0] for t in j]))
-
-        for x, val1 in sorted(list(frequents_candidates.items())):
+    def enum_seq(self,S):
+        freq_seqs={}
+        for x, val1 in S.items():
             T = {}
-            for y, val2 in sorted(list(frequents_candidates.items())):
+            for y, val2 in S.items():
                 tmp=[]
-                for t,n in val1:
-                    for k,l in val2:
-                        if t==k and l>n :
-                            if tmp.count((k,l))==0:
-                                tmp.append((k,l))
-                if type(x) == str:
-                    new_key = tuple((x, y))
-                else:
-                    new_key = tuple(list(i for i in x) + list(j for j in y))
-                if len(tmp):
-                    T[new_key] = tmp
+                for t, n in val1:
+                    for k, l in val2:
+                        if t == k and l > n:
+                            if tmp.count((k, l)) == 0:
+                                tmp.append((k, l))
+            if len(set([t[0] for t in tmp])) >= 2:
+                T[tuple(set(x).union(set(y)))] = tmp
+            print(T)
             if len(T):
-                freq_seqs.update(self.dfs(T, visited))
+                freq_seqs.update(self.enum_seq(T))
         return freq_seqs
+    
     def get_transposed_data(self,dataset):
         """
         return a dictionnary where keys are items and values are sets
@@ -59,6 +64,7 @@ class Spade:
                 else:
                     new_data[item].add(i)
         return new_data
+    
     def min_top_k(self):
         #c'est ici qu'on implemente le truc SPADE similaire à un DFS 
         pass
@@ -159,8 +165,8 @@ def main():
     neg = s.dfs(transac1)
 
 
-    result = add_supports(neg, pos)
-    most_frequent(result, pos, neg, k)
+    #result = add_supports(neg, pos)
+    #most_frequent(result, pos, neg, k)
 
 if __name__ == '__main__':
     main()

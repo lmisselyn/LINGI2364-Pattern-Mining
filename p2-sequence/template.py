@@ -12,11 +12,14 @@ class Spade:
     # Feel free to add parameters to this method
     def min_top_k(self):
         frequents = []
+        N = len(self.neg_transactions)
+        P = len(self.pos_transactions)
         pos = spade_repr_from_transaction(self.pos_transactions)
         neg = spade_repr_from_transaction(self.neg_transactions)
         # Compute the support of different symbols and sort them
         symbol_support = get_symbols_support(pos['covers'], neg['covers'])
-        sorted_symbols = sorted(symbol_support, key=lambda i: -symbol_support[i][2])
+        sorted_symbols = sorted(
+            symbol_support, key=lambda i: -symbol_support[i][2])
 
         # Prune base symbols
         #best_symbols = sorted_symbols[:self.k]
@@ -30,8 +33,6 @@ class Spade:
             index += 1
         best_symbols = sorted_symbols[:index]
 
-
-
         # Build patterns of size 2
         for symb in best_symbols:
             for symb2 in best_symbols:
@@ -39,51 +40,57 @@ class Spade:
                                   pos['repr'][symb] if symb in pos['repr'] else [],
                                   neg['repr'][symb] if symb in neg['repr'] else []))
 
-
-
-
-
-
         # DFS
         while len(frequents) > 0:
             item = frequents.pop()
-            pos_positions = find_sub_sequence(item[0], item[1], self.pos_transactions)
-            neg_positions = find_sub_sequence(item[0], item[2], self.neg_transactions)
+
+            pos_positions = find_sub_sequence(
+                item[0], item[1], self.pos_transactions)
+            neg_positions = find_sub_sequence(
+                item[0], item[2], self.neg_transactions)
             pos_supp = get_support_from_pos(pos_positions)
             neg_supp = get_support_from_pos(neg_positions)
 
-
             # Keep track of the minimum score during search
-
 
             if neg_supp + pos_supp >= min_score:
                 strItem = item_str(item[0])
-                symbol_support[strItem] = [pos_supp, neg_supp, pos_supp + neg_supp]
+                symbol_support[strItem] = [
+                    pos_supp, neg_supp, pos_supp + neg_supp]
                 for symb in best_symbols:
                     new_symbol = item[0].copy()
                     new_symbol.append(symb)
-                    frequents.append((new_symbol, pos_positions, neg_positions))
-        sorted_result = sorted(symbol_support.items(), key=lambda i: -i[1][2])
+                    frequents.append(
+                        (new_symbol, pos_positions, neg_positions))
+        # print(symbol_support)
+        tmp = {}
+        for key, value in symbol_support.items():
+            i = value[0]
+            j = value[1]
+            tmp[key] = [i, j, round(wracc(P, N, i, j), 5)]
+        sorted_result = sorted(tmp.items(), key=lambda i: -i[1][2])
         final_result = []
         previous_support = 0
         # Return top k patterns
         # All patterns with the same score worth for 1 k
+
         for item in sorted_result:
+
             if self.k != 0:
                 if item[1][2] != previous_support:
                     if previous_support != 0:
                         self.k -= 1
                     if self.k == 0:
-                        print_ressult2(final_result)
+                        print_result2(final_result)
                         return final_result
                     previous_support = item[1][2]
                     final_result.append(item)
                 else:
                     final_result.append(item)
             else:
-                print_ressult2(final_result)
+                print_result2(final_result)
                 return final_result
-        print_ressult2(final_result)
+        print_result2(final_result)
         return final_result
 
     def get_feature_matrices(self):
@@ -113,6 +120,10 @@ class Spade:
             predicted = classifier.predict(m['test_matrix'])
             accuracy = metrics.accuracy_score(m['test_labels'], predicted)
             print(f'Accuracy: {accuracy}')
+
+
+def wracc(P, N, px, nx):
+    return (P/(P+N)) * (N/(P+N)) * ((px/P) - (nx/N))
 
 
 def get_transactions(filepath):
@@ -207,13 +218,15 @@ def item_str(item):
         s += str(item[i])
         if i != len(item) - 1:
             s += ', '
+
     return s
 
 
-def print_ressult2(res):
+def print_result2(res):
     for r in res:
         symb = r[0]
-        print('['+ symb + ']' + ' ' + str(r[1][0]) + ' ' + str(r[1][1]) + ' ' + str(r[1][2]))
+        print('[' + symb + ']' + ' ' + str(r[1][0]) +
+              ' ' + str(r[1][1]) + ' ' + str(r[1][2]))
 
 
 def print_result(res):
@@ -225,7 +238,8 @@ def print_result(res):
                     symb += r[0][i] + ', '
                 else:
                     symb += r[0][i] + ']'
-        print(symb + ' ' + str(r[1][0]) + ' ' + str(r[1][1]) + ' ' + str(r[1][2]))
+        print(symb + ' ' + str(r[1][0]) + ' ' +
+              str(r[1][1]) + ' ' + str(r[1][2]))
 
 
 if __name__ == '__main__':
