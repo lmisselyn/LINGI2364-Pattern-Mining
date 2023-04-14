@@ -267,7 +267,28 @@ def print_result(res):
         print(symb + ' ' + str(r[1][0]) + ' ' +
               str(r[1][1]) + ' ' + str(r[1][2]))
 
+def build_repr(result,pos,neg):
+    rows1 = []
+    for pat in result:
+        tmp = check_presence(pat, pos)
+        rows1.append(tmp)
 
+    rows1 = [list(col) for col in zip(*rows1)]
+    for l in rows1:
+        l.append("P")
+
+    rows2 = []
+    for pat in result:
+        tmp = check_presence(pat, neg)
+        rows2.append(tmp)
+
+    rows2 = [list(col) for col in zip(*rows2)]
+    for l in rows2:
+        l.append("N")
+    
+    rows = rows1 + rows2
+
+    return rows
 if __name__ == '__main__':
     pos_filepath = sys.argv[1]
     neg_filepath = sys.argv[2]
@@ -289,12 +310,12 @@ if __name__ == '__main__':
                 tmp.append(str(j))
         result.append(tmp)
     
-    rows=[]
-    for pat in result:
-        rows.append(check_presence(pat,s.pos_transactions))
+    values.append("Class")
     
-    rows = [list(col) for col in zip(*rows)]
+    rows = build_repr(result,s.pos_transactions,s.neg_transactions)
+
     frame = pd.DataFrame(columns=values)
+    
     frame = frame.append(pd.DataFrame(
         rows, columns=frame.columns), ignore_index=True)
     print(frame)
