@@ -14,7 +14,7 @@ class Spade:
         for i in range(len(merged)):
             t[str("Transaction "+str(i+1))] = merged[i]
         print(t)
-        #check_presence(['A', 'B', 'C'], self.pos_transactions)
+        check_presence(['A', 'B', 'C'], self.pos_transactions)
 
     # Feel free to add parameters to this method
     def min_top_k(self):
@@ -41,7 +41,6 @@ class Spade:
         best_symbols = sorted_symbols[:index]
 
 
-        print(best_symbols)
         # Build patterns of size 2
         for symb in best_symbols:
             for symb2 in best_symbols:
@@ -224,19 +223,20 @@ def find_sub_sequence(item, positions, transactions):
     return new_positions
 
 def check_presence(pattern,transactions):
+    pres=[]
     for transaction in transactions:
         i = 0  # indice dans la transaction
         for element in pattern:
-            print(transaction,element)
+            if element not in transaction[i:]:
+                # l'élément n'est pas présent dans la transaction à partir de l'indice i
+                pres.append(0)
+                break
             # rechercher l'élément dans la transaction à partir de l'indice i
             i = transaction.index(element, i) + 1
-            if i == 0:
-                # l'élément n'a pas été trouvé dans la transaction
-                print("pas present")
-                break
         else:
             # tous les éléments du pattern ont été trouvés dans la transaction dans l'ordre
-            print('Le pattern est présent dans la transaction', transaction)
+            pres.append(1)
+    return pres
 
 def item_str(item):
     s = ""
@@ -279,6 +279,25 @@ if __name__ == '__main__':
     #k = int(7)
     s = Spade(pos_filepath, neg_filepath, k)
     values = []
+    result=[]
+    
     for i in s.min_top_k() :
+        tmp = []
         values.append(i[0])
+        for j in i[0] :
+            if str(j).isalpha():
+                tmp.append(str(j))
+        result.append(tmp)
+    
+    rows=[]
+    for pat in result:
+        rows.append(check_presence(pat,s.pos_transactions))
+    
+    rows = [list(col) for col in zip(*rows)]
     frame = pd.DataFrame(columns=values)
+    frame = frame.append(pd.DataFrame(
+        rows, columns=frame.columns), ignore_index=True)
+    print(frame)
+
+
+
