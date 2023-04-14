@@ -223,18 +223,23 @@ def find_sub_sequence(item, positions, transactions):
     return new_positions
 
 def check_presence(pattern,transactions):
+    """
+    Return a list for the presence of the pattern in each transaction
+    1 - pattern present in the transaction
+    0 - pattern not present
+    """
     pres=[]
     for transaction in transactions:
-        i = 0  # indice dans la transaction
+        i = 0  
         for element in pattern:
             if element not in transaction[i:]:
-                # l'élément n'est pas présent dans la transaction à partir de l'indice i
+                # not present
                 pres.append(0)
                 break
-            # rechercher l'élément dans la transaction à partir de l'indice i
+            # do the search from index i
             i = transaction.index(element, i) + 1
         else:
-            # tous les éléments du pattern ont été trouvés dans la transaction dans l'ordre
+            # the pattern is present
             pres.append(1)
     return pres
 
@@ -268,6 +273,9 @@ def print_result(res):
               str(r[1][1]) + ' ' + str(r[1][2]))
 
 def build_repr(result,pos,neg):
+    """
+    Return the representation needed by sklearn models
+    """
     rows1 = []
     for pat in result:
         tmp = check_presence(pat, pos)
@@ -289,6 +297,8 @@ def build_repr(result,pos,neg):
     rows = rows1 + rows2
 
     return rows
+
+
 if __name__ == '__main__':
     pos_filepath = sys.argv[1]
     neg_filepath = sys.argv[2]
