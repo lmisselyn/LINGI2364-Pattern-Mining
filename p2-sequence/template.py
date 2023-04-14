@@ -1,5 +1,6 @@
 import sys
 from sklearn import tree, metrics
+import pandas as pd
 
 
 class Spade:
@@ -8,6 +9,12 @@ class Spade:
         self.pos_transactions = get_transactions(pos_filepath)
         self.neg_transactions = get_transactions(neg_filepath)
         self.k = k
+        t = {}
+        merged = self.pos_transactions + self.neg_transactions
+        for i in range(len(merged)):
+            t[str("Transaction "+str(i+1))] = merged[i]
+        print(t)
+        #check_presence(['A', 'B', 'C'], self.pos_transactions)
 
     # Feel free to add parameters to this method
     def min_top_k(self):
@@ -33,6 +40,8 @@ class Spade:
             index += 1
         best_symbols = sorted_symbols[:index]
 
+
+        print(best_symbols)
         # Build patterns of size 2
         for symb in best_symbols:
             for symb2 in best_symbols:
@@ -43,9 +52,10 @@ class Spade:
         # DFS
         while len(frequents) > 0:
             item = frequents.pop()
-
+            
             pos_positions = find_sub_sequence(
                 item[0], item[1], self.pos_transactions)
+            
             neg_positions = find_sub_sequence(
                 item[0], item[2], self.neg_transactions)
             pos_supp = get_support_from_pos(pos_positions)
@@ -62,18 +72,19 @@ class Spade:
                     new_symbol.append(symb)
                     frequents.append(
                         (new_symbol, pos_positions, neg_positions))
-        # print(symbol_support)
+                    
         tmp = {}
         for key, value in symbol_support.items():
             i = value[0]
             j = value[1]
             tmp[key] = [i, j, round(wracc(P, N, i, j), 5)]
+
         sorted_result = sorted(tmp.items(), key=lambda i: -i[1][2])
         final_result = []
         previous_support = 0
         # Return top k patterns
         # All patterns with the same score worth for 1 k
-
+        #print(sorted_result)
         for item in sorted_result:
 
             if self.k != 0:
@@ -88,9 +99,9 @@ class Spade:
                 else:
                     final_result.append(item)
             else:
-                print_result2(final_result)
+                #print_result2(final_result)
                 return final_result
-        print_result2(final_result)
+        #print_result2(final_result)
         return final_result
 
     def get_feature_matrices(self):
@@ -202,6 +213,7 @@ def find_sub_sequence(item, positions, transactions):
     Return the positions in the transactions where the
     pattern (item) appears.
     """
+    
     new_positions = []
     for pos in positions:
         seq = transactions[pos[0]]
@@ -211,6 +223,20 @@ def find_sub_sequence(item, positions, transactions):
                 new_positions.append(new_pos)
     return new_positions
 
+def check_presence(pattern,transactions):
+    for transaction in transactions:
+        i = 0  # indice dans la transaction
+        for element in pattern:
+            print(transaction,element)
+            # rechercher l'élément dans la transaction à partir de l'indice i
+            i = transaction.index(element, i) + 1
+            if i == 0:
+                # l'élément n'a pas été trouvé dans la transaction
+                print("pas present")
+                break
+        else:
+            # tous les éléments du pattern ont été trouvés dans la transaction dans l'ordre
+            print('Le pattern est présent dans la transaction', transaction)
 
 def item_str(item):
     s = ""
@@ -252,4 +278,7 @@ if __name__ == '__main__':
     #neg_filepath = 'datasets/Test/negative.txt'
     #k = int(7)
     s = Spade(pos_filepath, neg_filepath, k)
-    s.min_top_k()
+    values = []
+    for i in s.min_top_k() :
+        values.append(i[0])
+    frame = pd.DataFrame(columns=values)
