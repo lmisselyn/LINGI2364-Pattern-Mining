@@ -1,5 +1,5 @@
 import sys
-from sklearn import tree, metrics
+from sklearn import tree, metrics, train_test_split
 import pandas as pd
 
 
@@ -328,6 +328,12 @@ if __name__ == '__main__':
     
     frame = frame.append(pd.DataFrame(
         rows, columns=frame.columns), ignore_index=True)
+    
+    X = frame.drop('Class',axis=1)
+    y = frame['Class']
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2)
+    
     print(frame)
 
 
