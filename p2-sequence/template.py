@@ -1,5 +1,6 @@
 import sys
-from sklearn import tree, metrics, train_test_split
+from sklearn import tree, metrics
+from sklearn.model_selection import train_test_split
 import pandas as pd
 
 
@@ -9,13 +10,7 @@ class Spade:
         self.pos_transactions = get_transactions(pos_filepath)
         self.neg_transactions = get_transactions(neg_filepath)
         self.k = k
-        t = {}
-        merged = self.pos_transactions + self.neg_transactions
-        for i in range(len(merged)):
-            t[str("Transaction "+str(i+1))] = merged[i]
-        print(t)
-        check_presence(['A', 'B', 'C'], self.pos_transactions)
-
+    
     # Feel free to add parameters to this method
     def min_top_k(self):
         frequents = []
@@ -98,9 +93,7 @@ class Spade:
                 else:
                     final_result.append(item)
             else:
-                #print_result2(final_result)
                 return final_result
-        #print_result2(final_result)
         return final_result
 
     def get_feature_matrices(self):
@@ -111,7 +104,7 @@ class Spade:
             'test_labels': [],
         }
 
-    def cross_validation(self, nfolds):
+    def cross_validation(self, nfolds,m):
         pos_fold_size = len(self.pos_transactions) // nfolds
         neg_fold_size = len(self.neg_transactions) // nfolds
         for fold in range(nfolds):
@@ -123,7 +116,7 @@ class Spade:
 
             self.min_top_k()
 
-            m = self.get_feature_matrices()
+            
             classifier = tree.DecisionTreeClassifier(random_state=1)
             classifier.fit(m['train_matrix'], m['train_labels'])
 
@@ -331,10 +324,16 @@ if __name__ == '__main__':
     
     X = frame.drop('Class',axis=1)
     y = frame['Class']
+
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2)
-    
-    print(frame)
+    m = {
+        'train_matrix': X_train,
+        'test_matrix': X_test,
+        'train_labels': y_train,
+        'test_labels': y_test,
+    }
+    s.cross_validation(5,m)
 
 
 
