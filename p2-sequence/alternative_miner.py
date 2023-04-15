@@ -1,6 +1,6 @@
-import sys
 from sklearn import tree, metrics
-
+import pandas as pd
+from sklearn.model_selection import train_test_split, cross_val_score
 
 class Spade:
 
@@ -93,6 +93,7 @@ class Spade:
             print(f'Accuracy: {accuracy}')
 
     def alternative_mine_top_k(self):
+        #fix check_presence
         n_iter = self.k
         self.k = 1
         result = []
@@ -100,7 +101,8 @@ class Spade:
             pattern = self.min_top_k()[0]
             if pattern == False:
                 return result
-            print(pattern)
+            if type(pattern) == type("ok"):
+                pattern = [pattern]
             result.append(pattern)
             present_pos = check_presence(pattern, self.pos_transactions)
             present_neg = check_presence(pattern, self.neg_transactions)
@@ -243,7 +245,6 @@ def check_presence(pattern, transactions):
     for transaction in transactions:
         i = 0
         for element in pattern:
-            print(element)
             if element not in transaction[i:]:
                 # not present
                 pres.append(0)
@@ -256,6 +257,37 @@ def check_presence(pattern, transactions):
     return pres
 
 
+def build_repr(result, pos, neg):
+    """
+    Return the representation needed by sklearn models
+    """
+    rows1 = []
+    for pat in result:
+        tmp = check_presence(pat, pos)
+        rows1.append(tmp)
+
+    rows1 = [list(col) for col in zip(*rows1)]
+    for l in rows1:
+        l.append("P")
+
+    rows2 = []
+    for pat in result:
+        tmp = check_presence(pat, neg)
+        rows2.append(tmp)
+
+    rows2 = [list(col) for col in zip(*rows2)]
+    for l in rows2:
+        l.append("N")
+
+    rows = rows1 + rows2
+
+    return rows
+
+
+def cross_val(n, X, y):
+    model = tree.DecisionTreeClassifier(random_state=1)
+    scores = cross_val_score(model, X=X, y=y, cv=n, scoring='accuracy')
+    print(scores)
 
 if __name__ == '__main__':
     #pos_filepath = sys.argv[1]
@@ -267,4 +299,37 @@ if __name__ == '__main__':
     #neg_filepath = 'datasets/Test/negative.txt'
     k = int(7)
     s = Spade(pos_filepath, neg_filepath, k)
-    print(s.alternative_mine_top_k())
+    patterns = s.alternative_mine_top_k()
+
+    values = []
+    result = []
+
+    for i in patterns:
+        tmp = []
+        values.append(i[0])
+        for j in i[0]:
+            if str(j).isalpha():
+                tmp.append(str(j))
+        result.append(tmp)
+
+    values.append("Class")
+
+    rows = build_repr(result, s.pos_transactions, s.neg_transactions)
+
+    frame = pd.DataFrame(columns=values)
+
+    frame = frame.append(pd.DataFrame(
+        rows, columns=frame.columns), ignore_index=True)
+
+    X = frame.drop('Class', axis=1)
+    y = frame['Class']
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2)
+    m = {
+        'train_matrix': X_train,
+        'test_matrix': X_test,
+        'train_labels': y_train,
+        'test_labels': y_test,
+    }
+    cross_val(5, X, y)
