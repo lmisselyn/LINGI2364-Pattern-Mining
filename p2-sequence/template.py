@@ -1,6 +1,6 @@
 import sys
 from sklearn import tree, metrics
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score
 import pandas as pd
 
 
@@ -114,7 +114,7 @@ class Spade:
             neg_train_set = {i for i in range(len(self.neg_transactions)) if
                              i < fold * neg_fold_size or i >= (fold + 1) * neg_fold_size}
 
-            self.min_top_k()
+            #self.min_top_k()
 
             
             classifier = tree.DecisionTreeClassifier(random_state=1)
@@ -291,16 +291,24 @@ def build_repr(result,pos,neg):
 
     return rows
 
+def cross_val(n, X, y):
+
+    model = tree.DecisionTreeClassifier(random_state=1)
+    scores = cross_val_score(model, X=X, y=y, cv=n, scoring='accuracy')
+    print(scores)
+
 
 if __name__ == '__main__':
-    pos_filepath = sys.argv[1]
-    neg_filepath = sys.argv[2]
-    k = int(sys.argv[3])
+    #pos_filepath = sys.argv[1]
+    #neg_filepath = sys.argv[2]
+    #k = int(sys.argv[3])
     #pos_filepath = 'datasets/Reuters_small/positive_earn_small.txt'
     #neg_filepath = 'datasets/Reuters_small/negative_acq_small.txt'
+    pos_filepath = 'datasets/Protein/positive_SRC1521.txt'
+    neg_filepath = 'datasets/Protein/negative_PKA_group15.txt'
     #pos_filepath = 'datasets/Test/positive.txt'
     #neg_filepath = 'datasets/Test/negative.txt'
-    #k = int(7)
+    k = int(5)
     s = Spade(pos_filepath, neg_filepath, k)
     values = []
     result=[]
@@ -333,7 +341,8 @@ if __name__ == '__main__':
         'train_labels': y_train,
         'test_labels': y_test,
     }
-    s.cross_validation(5,m)
+    cross_val(5, X, y)
+    #s.cross_validation(5,m)
 
 
 
