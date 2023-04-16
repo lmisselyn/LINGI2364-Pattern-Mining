@@ -1,4 +1,7 @@
+import math
 import sys
+
+import numpy as np
 from sklearn import tree, metrics
 from sklearn.model_selection import train_test_split, cross_val_score
 import pandas as pd
@@ -10,7 +13,7 @@ class Spade:
         self.pos_transactions = get_transactions(pos_filepath)
         self.neg_transactions = get_transactions(neg_filepath)
         self.k = k
-    
+
     # Feel free to add parameters to this method
     def min_top_k(self):
         frequents = []
@@ -24,17 +27,16 @@ class Spade:
             symbol_support, key=lambda i: -symbol_support[i][2])
 
         # Prune base symbols
-        #best_symbols = sorted_symbols[:self.k]
-        #min_score = symbol_support[best_symbols[-1]][2]
+        # best_symbols = sorted_symbols[:self.k]
+        # min_score = symbol_support[best_symbols[-1]][2]
 
-        min_score = symbol_support[sorted_symbols[0]][2]/self.k
+        min_score = symbol_support[sorted_symbols[0]][2] / self.k
         index = 0
         for s in sorted_symbols:
             if symbol_support[s][2] < min_score:
                 break
             index += 1
         best_symbols = sorted_symbols[:index]
-
 
         # Build patterns of size 2
         for symb in best_symbols:
@@ -46,10 +48,10 @@ class Spade:
         # DFS
         while len(frequents) > 0:
             item = frequents.pop()
-            
+
             pos_positions = find_sub_sequence(
                 item[0], item[1], self.pos_transactions)
-            
+
             neg_positions = find_sub_sequence(
                 item[0], item[2], self.neg_transactions)
             pos_supp = get_support_from_pos(pos_positions)
@@ -66,7 +68,7 @@ class Spade:
                     new_symbol.append(symb)
                     frequents.append(
                         (new_symbol, pos_positions, neg_positions))
-                    
+
         tmp = {}
         for key, value in symbol_support.items():
             i = value[0]
@@ -78,14 +80,15 @@ class Spade:
         previous_support = 0
         # Return top k patterns
         # All patterns with the same score worth for 1 k
-        #print(sorted_result)
+        # print(sorted_result)
+        size = self.k
         for item in sorted_result:
 
-            if self.k != 0:
+            if size != 0:
                 if item[1][2] != previous_support:
                     if previous_support != 0:
-                        self.k -= 1
-                    if self.k == 0:
+                        size -= 1
+                    if size == 0:
                         print_result2(final_result)
                         return final_result
                     previous_support = item[1][2]
@@ -104,7 +107,7 @@ class Spade:
             'test_labels': [],
         }
 
-    def cross_validation(self, nfolds,m):
+    def cross_validation(self, nfolds, m):
         pos_fold_size = len(self.pos_transactions) // nfolds
         neg_fold_size = len(self.neg_transactions) // nfolds
         for fold in range(nfolds):
@@ -114,9 +117,8 @@ class Spade:
             neg_train_set = {i for i in range(len(self.neg_transactions)) if
                              i < fold * neg_fold_size or i >= (fold + 1) * neg_fold_size}
 
-            #self.min_top_k()
+            # self.min_top_k()
 
-            
             classifier = tree.DecisionTreeClassifier(random_state=1)
             classifier.fit(m['train_matrix'], m['train_labels'])
 
@@ -126,7 +128,7 @@ class Spade:
 
 
 def wracc(P, N, px, nx):
-    return (P/(P+N)) * (N/(P+N)) * ((px/P) - (nx/N))
+    return (P / (P + N)) * (N / (P + N)) * ((px / P) - (nx / N))
 
 
 def get_transactions(filepath):
@@ -205,7 +207,7 @@ def find_sub_sequence(item, positions, transactions):
     Return the positions in the transactions where the
     pattern (item) appears.
     """
-    
+
     new_positions = []
     for pos in positions:
         seq = transactions[pos[0]]
@@ -215,15 +217,16 @@ def find_sub_sequence(item, positions, transactions):
                 new_positions.append(new_pos)
     return new_positions
 
-def check_presence(pattern,transactions):
+
+def check_presence(pattern, transactions):
     """
     Return a list for the presence of the pattern in each transaction
     1 - pattern present in the transaction
     0 - pattern not present
     """
-    pres=[]
+    pres = []
     for transaction in transactions:
-        i = 0  
+        i = 0
         for element in pattern:
             if element not in transaction[i:]:
                 # not present
@@ -235,6 +238,7 @@ def check_presence(pattern,transactions):
             # the pattern is present
             pres.append(1)
     return pres
+
 
 def item_str(item):
     s = ""
@@ -265,7 +269,8 @@ def print_result(res):
         print(symb + ' ' + str(r[1][0]) + ' ' +
               str(r[1][1]) + ' ' + str(r[1][2]))
 
-def build_repr(result,pos,neg):
+
+def build_repr(result, pos, neg):
     """
     Return the representation needed by sklearn models
     """
@@ -286,63 +291,55 @@ def build_repr(result,pos,neg):
     rows2 = [list(col) for col in zip(*rows2)]
     for l in rows2:
         l.append("N")
-    
+
     rows = rows1 + rows2
 
     return rows
 
-def cross_val(n, X, y):
 
+def cross_val(n, X, y):
     model = tree.DecisionTreeClassifier(random_state=1)
     scores = cross_val_score(model, X=X, y=y, cv=n, scoring='accuracy')
-    print(scores)
+    return scores
 
 
 if __name__ == '__main__':
-    #pos_filepath = sys.argv[1]
-    #neg_filepath = sys.argv[2]
-    #k = int(sys.argv[3])
-    #pos_filepath = 'datasets/Reuters_small/positive_earn_small.txt'
-    #neg_filepath = 'datasets/Reuters_small/negative_acq_small.txt'
-    pos_filepath = 'datasets/Protein/positive_SRC1521.txt'
-    neg_filepath = 'datasets/Protein/negative_PKA_group15.txt'
-    #pos_filepath = 'datasets/Test/positive.txt'
-    #neg_filepath = 'datasets/Test/negative.txt'
-    k = int(5)
-    s = Spade(pos_filepath, neg_filepath, k)
-    values = []
-    result=[]
-    
-    for i in s.min_top_k() :
-        tmp = []
-        values.append(i[0])
-        for j in i[0] :
-            if str(j).isalpha():
-                tmp.append(str(j))
-        result.append(tmp)
-    
-    values.append("Class")
-    
-    rows = build_repr(result,s.pos_transactions,s.neg_transactions)
+    # pos_filepath = sys.argv[1]
+    # neg_filepath = sys.argv[2]
+    # k = int(sys.argv[3])
+    pos_filepath = 'datasets/Reuters_small/positive_earn_small.txt'
+    neg_filepath = 'datasets/Reuters_small/negative_acq_small.txt'
+    #pos_filepath = 'datasets/Protein/positive_SRC1521.txt'
+    #neg_filepath = 'datasets/Protein/negative_PKA_group15.txt'
+    # pos_filepath = 'datasets/Test/positive.txt'
+    # neg_filepath = 'datasets/Test/negative.txt'
 
-    frame = pd.DataFrame(columns=values)
-    
-    frame = frame.append(pd.DataFrame(
-        rows, columns=frame.columns), ignore_index=True)
-    
-    X = frame.drop('Class',axis=1)
-    y = frame['Class']
+    accuracies = []
+    for i in range(1, 11):
+        k = i
+        s = Spade(pos_filepath, neg_filepath, k)
+        values = []
+        result = []
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2)
-    m = {
-        'train_matrix': X_train,
-        'test_matrix': X_test,
-        'train_labels': y_train,
-        'test_labels': y_test,
-    }
-    cross_val(5, X, y)
-    #s.cross_validation(5,m)
+        for j in s.min_top_k():
+            tmp = []
+            values.append(j[0])
+            for l in j[0]:
+                if str(l).isalpha():
+                    tmp.append(str(l))
+            result.append(tmp)
 
+        values.append("Class")
 
+        rows = build_repr(result, s.pos_transactions, s.neg_transactions)
 
+        frame = pd.DataFrame(columns=values)
+
+        frame = frame.append(pd.DataFrame(
+            rows, columns=frame.columns), ignore_index=True)
+
+        X = frame.drop('Class', axis=1)
+        y = frame['Class']
+
+        accuracies.append(round(np.mean(cross_val(5, X, y)), 3))
+    print(accuracies)
