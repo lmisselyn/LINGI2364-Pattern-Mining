@@ -89,7 +89,6 @@ class Spade:
                     if previous_support != 0:
                         size -= 1
                     if size == 0:
-                        print_result2(final_result)
                         return final_result
                     previous_support = item[1][2]
                     final_result.append(item)
@@ -276,6 +275,8 @@ def build_repr(result, pos, neg):
     """
     rows1 = []
     for pat in result:
+        if type(pat) == type("ok"):
+            pat = [pat]
         tmp = check_presence(pat, pos)
         rows1.append(tmp)
 
@@ -285,6 +286,8 @@ def build_repr(result, pos, neg):
 
     rows2 = []
     for pat in result:
+        if type(pat) == type("ok"):
+            pat = [pat]
         tmp = check_presence(pat, neg)
         rows2.append(tmp)
 
@@ -300,6 +303,7 @@ def build_repr(result, pos, neg):
 def cross_val(n, X, y):
     model = tree.DecisionTreeClassifier(random_state=1)
     scores = cross_val_score(model, X=X, y=y, cv=n, scoring='accuracy')
+    print(scores)
     return scores
 
 
@@ -311,8 +315,8 @@ if __name__ == '__main__':
     neg_filepath = 'datasets/Reuters_small/negative_acq_small.txt'
     #pos_filepath = 'datasets/Protein/positive_SRC1521.txt'
     #neg_filepath = 'datasets/Protein/negative_PKA_group15.txt'
-    # pos_filepath = 'datasets/Test/positive.txt'
-    # neg_filepath = 'datasets/Test/negative.txt'
+    #pos_filepath = 'datasets/Test/positive.txt'
+    #neg_filepath = 'datasets/Test/negative.txt'
 
     accuracies = []
     for i in range(1, 11):
@@ -321,13 +325,20 @@ if __name__ == '__main__':
         values = []
         result = []
 
-        for j in s.min_top_k():
-            tmp = []
+        top_patterns = s.min_top_k()
+        print(top_patterns)
+        for j in top_patterns:
             values.append(j[0])
-            for l in j[0]:
+            """
+            tmp = []
+
+            array_patt = j[0].split(', ')
+            for l in array_patt:
                 if str(l).isalpha():
                     tmp.append(str(l))
             result.append(tmp)
+            """
+            result.append(j[0].split(', '))
 
         values.append("Class")
 

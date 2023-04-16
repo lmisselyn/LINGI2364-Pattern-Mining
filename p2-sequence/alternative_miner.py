@@ -1,7 +1,8 @@
 from sklearn import tree, metrics
 import pandas as pd
 from sklearn.model_selection import train_test_split, cross_val_score
-
+from xgboost import XGBClassifier
+from sklearn.preprocessing import LabelEncoder
 class Spade:
 
     def __init__(self, pos_filepath, neg_filepath, k):
@@ -285,9 +286,12 @@ def build_repr(result, pos, neg):
 
 
 def cross_val(n, X, y):
-    model = tree.DecisionTreeClassifier(random_state=1)
+    model = XGBClassifier()
+    le = LabelEncoder()
+    y = le.fit_transform(y)
     scores = cross_val_score(model, X=X, y=y, cv=n, scoring='accuracy')
     print(scores)
+
 
 if __name__ == '__main__':
     #pos_filepath = sys.argv[1]
@@ -314,7 +318,8 @@ if __name__ == '__main__':
 
     values.append("Class")
 
-    rows = build_repr(result, s.pos_transactions, s.neg_transactions)
+    new_s = Spade(pos_filepath, neg_filepath, k)
+    rows = build_repr(result, new_s.pos_transactions, new_s.neg_transactions)
 
     frame = pd.DataFrame(columns=values)
 
@@ -323,13 +328,6 @@ if __name__ == '__main__':
 
     X = frame.drop('Class', axis=1)
     y = frame['Class']
+    print(frame)
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2)
-    m = {
-        'train_matrix': X_train,
-        'test_matrix': X_test,
-        'train_labels': y_train,
-        'test_labels': y_test,
-    }
     cross_val(5, X, y)
