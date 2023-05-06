@@ -1,11 +1,10 @@
-import numpy as np
-import xgboost
-from sklearn import tree, metrics
-import pandas as pd
-from sklearn.model_selection import train_test_split, cross_val_score
-from xgboost import XGBClassifier
-from sklearn.preprocessing import LabelEncoder
+import math
+import sys
 from helper import *
+import numpy as np
+from sklearn import tree, metrics
+from sklearn.model_selection import train_test_split, cross_val_score
+import pandas as pd
 
 
 class Spade:
@@ -25,14 +24,13 @@ class Spade:
         sorted_symbols = sorted(symbol_support, key=lambda i: -symbol_support[i][2])
 
         # Prune base symbols
-        min_score = symbol_support[sorted_symbols[0]][2]/self.k
+        min_score = symbol_support[sorted_symbols[0]][2] / self.k
         index = 0
         for s in sorted_symbols:
             if symbol_support[s][2] < min_score:
                 break
             index += 1
         best_symbols = sorted_symbols[:index]
-
 
         # Build patterns of size 2
         for symb in best_symbols:
@@ -58,8 +56,27 @@ class Spade:
                     frequents.append((new_symbol, pos_positions, neg_positions))
         sorted_result = sorted(symbol_support.items(), key=lambda i: -i[1][2])
 
+        final_result = []
+        previous_support = 0
+        # Return top k patterns
         # All patterns with the same score worth for 1 k
-        return sorted_result[0]
+        # print(sorted_result)
+        size = self.k
+        for item in sorted_result:
+
+            if size != 0:
+                if item[1][2] != previous_support:
+                    if previous_support != 0:
+                        size -= 1
+                    if size == 0:
+                        return final_result
+                    previous_support = item[1][2]
+                    final_result.append(item)
+                else:
+                    final_result.append(item)
+            else:
+                return final_result
+        return final_result
 
     def get_feature_matrices(self):
         return {
@@ -69,7 +86,7 @@ class Spade:
             'test_labels': [],
         }
 
-    def cross_validation(self, nfolds):
+    def cross_validation(self, nfolds, m):
         pos_fold_size = len(self.pos_transactions) // nfolds
         neg_fold_size = len(self.neg_transactions) // nfolds
         for fold in range(nfolds):
@@ -79,9 +96,8 @@ class Spade:
             neg_train_set = {i for i in range(len(self.neg_transactions)) if
                              i < fold * neg_fold_size or i >= (fold + 1) * neg_fold_size}
 
-            self.min_top_k()
+            # self.min_top_k()
 
-            m = self.get_feature_matrices()
             classifier = tree.DecisionTreeClassifier(random_state=1)
             classifier.fit(m['train_matrix'], m['train_labels'])
 
@@ -89,65 +105,26 @@ class Spade:
             accuracy = metrics.accuracy_score(m['test_labels'], predicted)
             print(f'Accuracy: {accuracy}')
 
-    def alternative_mine_top_k(self):
-        #fix check_presence
-        n_iter = self.k
-        self.k = 1
-        result = []
-        for i in range(n_iter):
-            pattern = self.min_top_k()[0]
-            if pattern == False:
-                return result
-            if type(pattern) == type("ok"):
-                pattern = [pattern]
-            result.append(pattern)
-            present_pos = check_presence(pattern, self.pos_transactions)
-            present_neg = check_presence(pattern, self.neg_transactions)
-
-            new_pos_transactions = []
-            new_neg_transactions = []
-
-            for j in range(len(present_pos)):
-                if present_pos[j] == 0:
-                    new_pos_transactions.append(self.pos_transactions[j])
-            for j in range(len(present_neg)):
-                if present_neg[j] == 0:
-                    new_neg_transactions.append(self.neg_transactions[j])
-
-            self.pos_transactions = new_pos_transactions
-            self.neg_transactions = new_neg_transactions
-        return result
 
 
 
 def cross_val(n, X, y):
-    le = LabelEncoder()
-    y = le.fit_transform(y)
-    res = []
-    for i in range(n):
-        x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=i)
-
-        model = XGBClassifier(booster='gbtree')
-        model.fit(x_train, y_train)
-        y_predict = model.predict(x_test)
-        res.append(metrics.accuracy_score(y_test, y_predict))
-    print(res)
-    return res
-
-
+    model = tree.DecisionTreeClassifier(random_state=1)
+    scores = cross_val_score(model, X=X, y=y, cv=n, scoring='accuracy')
+    print(scores)
+    return scores
 
 
 if __name__ == '__main__':
-    #pos_filepath = sys.argv[1]
-    #neg_filepath = sys.argv[2]
-    #k = int(sys.argv[3])
+    # pos_filepath = sys.argv[1]
+    # neg_filepath = sys.argv[2]
+    # k = int(sys.argv[3])
     pos_filepath = 'datasets/Reuters_small/positive_earn_small.txt'
     neg_filepath = 'datasets/Reuters_small/negative_acq_small.txt'
     #pos_filepath = 'datasets/Protein/positive_SRC1521.txt'
     #neg_filepath = 'datasets/Protein/negative_PKA_group15.txt'
     #pos_filepath = 'datasets/Test/positive.txt'
     #neg_filepath = 'datasets/Test/negative.txt'
-
 
     accuracies = []
     for i in range(1, 11):
@@ -156,24 +133,20 @@ if __name__ == '__main__':
         values = []
         result = []
 
-        top_patterns = s.alternative_mine_top_k()
-        print(top_patterns)
+        top_patterns = s.min_top_k()
 
-        for p in top_patterns:
-            values.append(p[0])
-            result.append(p[0].split(', '))
-
+        for j in top_patterns:
+            values.append(j[0])
+            result.append(j[0].split(', '))
+        print(result)
         values.append("Class")
 
+        rows = build_repr(result, s.pos_transactions, s.neg_transactions)
 
-        t = Spade(pos_filepath, neg_filepath, k)
-        rows = build_repr(result, t.pos_transactions, t.neg_transactions)
+        frame = pd.DataFrame(columns=values)
 
-        frame = pd.DataFrame(rows, columns=values)
-
-
-        #frame = frame.append(pd.DataFrame(
-         #   rows, columns=frame.columns), ignore_index=True)
+        frame = frame.append(pd.DataFrame(
+            rows, columns=frame.columns), ignore_index=True)
 
         X = frame.drop('Class', axis=1)
         y = frame['Class']

@@ -18,21 +18,23 @@ class Spade:
     # Feel free to add parameters to this method
     def min_top_k(self):
         frequents = []
+        N = len(self.neg_transactions)
+        P = len(self.pos_transactions)
         pos = spade_repr_from_transaction(self.pos_transactions)
         neg = spade_repr_from_transaction(self.neg_transactions)
         # Compute the support of different symbols and sort them
         symbol_support = get_symbols_support(pos['covers'], neg['covers'])
-        sorted_symbols = sorted(symbol_support, key=lambda i: -symbol_support[i][2])
+        sorted_symbols = sorted(
+            symbol_support, key=lambda i: -symbol_support[i][2])
 
         # Prune base symbols
-        min_score = symbol_support[sorted_symbols[0]][2]/self.k
+        min_score = symbol_support[sorted_symbols[0]][2] / self.k
         index = 0
         for s in sorted_symbols:
             if symbol_support[s][2] < min_score:
                 break
             index += 1
         best_symbols = sorted_symbols[:index]
-
 
         # Build patterns of size 2
         for symb in best_symbols:
@@ -44,21 +46,35 @@ class Spade:
         # DFS
         while len(frequents) > 0:
             item = frequents.pop()
-            pos_positions = find_sub_sequence(item[0], item[1], self.pos_transactions)
-            neg_positions = find_sub_sequence(item[0], item[2], self.neg_transactions)
+
+            pos_positions = find_sub_sequence(
+                item[0], item[1], self.pos_transactions)
+
+            neg_positions = find_sub_sequence(
+                item[0], item[2], self.neg_transactions)
             pos_supp = get_support_from_pos(pos_positions)
             neg_supp = get_support_from_pos(neg_positions)
 
+            # Keep track of the minimum score during search
+
             if neg_supp + pos_supp >= min_score:
                 strItem = item_str(item[0])
-                symbol_support[strItem] = [pos_supp, neg_supp, pos_supp + neg_supp]
+                symbol_support[strItem] = [
+                    pos_supp, neg_supp, pos_supp + neg_supp]
                 for symb in best_symbols:
                     new_symbol = item[0].copy()
                     new_symbol.append(symb)
-                    frequents.append((new_symbol, pos_positions, neg_positions))
-        sorted_result = sorted(symbol_support.items(), key=lambda i: -i[1][2])
+                    frequents.append(
+                        (new_symbol, pos_positions, neg_positions))
 
-        # All patterns with the same score worth for 1 k
+        tmp = {}
+        for key, value in symbol_support.items():
+            i = value[0]
+            j = value[1]
+            tmp[key] = [i, j, round(wracc(P, N, i, j), 5)]
+
+        sorted_result = sorted(tmp.items(), key=lambda i: -i[1][2])
+
         return sorted_result[0]
 
     def get_feature_matrices(self):
@@ -138,13 +154,15 @@ def cross_val(n, X, y):
 
 
 if __name__ == '__main__':
+
+    print(round(np.mean([0.8345323741007195, 0.8705035971223022, 0.8273381294964028, 0.9064748201438849, 0.8633093525179856]), 3))
     #pos_filepath = sys.argv[1]
     #neg_filepath = sys.argv[2]
     #k = int(sys.argv[3])
-    pos_filepath = 'datasets/Reuters_small/positive_earn_small.txt'
-    neg_filepath = 'datasets/Reuters_small/negative_acq_small.txt'
-    #pos_filepath = 'datasets/Protein/positive_SRC1521.txt'
-    #neg_filepath = 'datasets/Protein/negative_PKA_group15.txt'
+    #pos_filepath = 'datasets/Reuters_small/positive_earn_small.txt'
+    #neg_filepath = 'datasets/Reuters_small/negative_acq_small.txt'
+    pos_filepath = 'datasets/Protein/positive_SRC1521.txt'
+    neg_filepath = 'datasets/Protein/negative_PKA_group15.txt'
     #pos_filepath = 'datasets/Test/positive.txt'
     #neg_filepath = 'datasets/Test/negative.txt'
 
@@ -164,7 +182,6 @@ if __name__ == '__main__':
             result.append(p[0].split(', '))
 
         values.append("Class")
-
 
         t = Spade(pos_filepath, neg_filepath, k)
         rows = build_repr(result, t.pos_transactions, t.neg_transactions)
