@@ -1,5 +1,7 @@
 import re
 
+import pandas as pd
+
 
 # A class for representing the Conditional Probability Tables of a variable
 class CPT:
@@ -189,32 +191,22 @@ class BayesianNetwork:
                 combi.append({Y[0]: y1, Y[1]: y2})
         return combi
 
+def structure_learning(filename, network_name):
+    values={2: "{ TRUE, FALSE };", 3: "{ LOW, NORMAL, HIGH };", 4: "{ ZERO, LOW, NORMAL, HIGH };" }
+    file = open("networks/"+network_name, "a")
+    df = pd.read_csv(filename)
+    variables = df.columns
+    for v in variables:
+        cardinality = len(df[v].unique())
+        file.write("variable "+v+" {\n  type discrete [")
+
+
 
 # Example for how to read a BayesianNetwork
-bn = BayesianNetwork("test.bif")
+#bn = BayesianNetwork("test.bif")
 
-print(bn.get_distrib_givenX_V2(['FLU', 'FEVER'], {'FATIGUE': 'TRUE'}))
+#print(bn.get_distrib_givenX_V2(['FLU', 'FEVER'], {'FATIGUE': 'TRUE'}))
 
-#bn.get_distrib_givenX("VENTLUNG", {'INTUBATION': 'NORMAL', 'KINKEDTUBE': 'FALSE', 'VENTTUBE': 'ZERO'})
+if __name__ == '__main__':
 
-#print(bn.P_Yisy_given_parents("HYPOVOLEMIA", "TRUE", {}))
-
-# Example for how to write a BayesianNetwork
-bn.write("alarm2.bif")
-
-# Examples for how to get an entry from the CPT
-
-# return P(HISTORY=TRUE|LVFAILURE=TRUE)
-#print(bn.P_Yisy_given_parents_x("HISTORY", "TRUE", ("TRUE",)))
-# or
-#print(bn.P_Yisy_given_parents("HISTORY", "TRUE", {"LVFAILURE": "TRUE"}))
-
-# return P(HRBP=NORMAL|ERRLOWOUTPUT=TRUE,HR=LOW)
-#print(bn.P_Yisy_given_parents_x("HRBP", "NORMAL", ("TRUE", "LOW")))
-# or
-#print(bn.P_Yisy_given_parents("HRBP", "NORMAL", {"ERRLOWOUTPUT": "TRUE", "HR": "LOW"}))
-
-# return P(HYPOVOLEMIA=TRUE)
-#print(bn.P_Yisy_given_parents_x("HYPOVOLEMIA", "TRUE"))
-# or
-#print(bn.P_Yisy_given_parents("HYPOVOLEMIA", "TRUE"))
+    structure_learning('datasets/alarm/train.csv')
