@@ -162,11 +162,38 @@ class BayesianNetwork:
         return res_distrib
 
 
+    def get_distrib_givenX_V2(self, Y, x={}):
+        res_distrib = {}
+        combinaisons = self.get_combinations(Y)
+        # denominator
+        p_denominator = 0
+        for dic in combinaisons:
+            transac = x.copy()
+            transac[Y[0]] = dic[Y[0]]
+            transac[Y[1]] = dic[Y[1]]
+            p_denominator += self.P_transaction(transac)
+        # numerator
+        for dic in combinaisons:
+            transac = x.copy()
+            transac[Y[0]] = dic[Y[0]]
+            transac[Y[1]] = dic[Y[1]]
+            p_numerator = self.P_transaction(transac)
+            res_distrib[str([dic[Y[0]], dic[Y[1]]])] = p_numerator/p_denominator
+        return res_distrib
+
+
+    def get_combinations(self, Y):
+        combi = []
+        for y1 in self.variables[Y[0]].values:
+            for y2 in self.variables[Y[1]].values:
+                combi.append({Y[0]: y1, Y[1]: y2})
+        return combi
+
 
 # Example for how to read a BayesianNetwork
 bn = BayesianNetwork("test.bif")
 
-print(bn.get_distrib_givenX('FLU', {'FEVER': 'TRUE', 'FATIGUE': 'TRUE'}))
+print(bn.get_distrib_givenX_V2(['FLU', 'FEVER'], {'FATIGUE': 'TRUE'}))
 
 #bn.get_distrib_givenX("VENTLUNG", {'INTUBATION': 'NORMAL', 'KINKEDTUBE': 'FALSE', 'VENTTUBE': 'ZERO'})
 
