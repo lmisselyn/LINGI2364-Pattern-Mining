@@ -1,0 +1,222 @@
+variable LVFAILURE {
+  type discrete [ 2 ] { TRUE, FALSE };
+}
+variable HISTORY {
+  type discrete [ 2 ] { TRUE, FALSE };
+}
+variable LVEDVOLUME {
+  type discrete [ 3 ] { LOW, NORMAL, HIGH };
+}
+variable CVP {
+  type discrete [ 3 ] { LOW, NORMAL, HIGH };
+}
+variable PCWP {
+  type discrete [ 3 ] { LOW, NORMAL, HIGH };
+}
+variable HYPOVOLEMIA {
+  type discrete [ 2 ] { TRUE, FALSE };
+}
+variable STROKEVOLUME {
+  type discrete [ 3 ] { LOW, NORMAL, HIGH };
+}
+variable ERRLOWOUTPUT {
+  type discrete [ 2 ] { TRUE, FALSE };
+}
+variable HRBP {
+  type discrete [ 3 ] { LOW, NORMAL, HIGH };
+}
+variable HR {
+  type discrete [ 3 ] { LOW, NORMAL, HIGH };
+}
+variable ERRCAUTER {
+  type discrete [ 2 ] { TRUE, FALSE };
+}
+variable HREKG {
+  type discrete [ 3 ] { LOW, NORMAL, HIGH };
+}
+variable HRSAT {
+  type discrete [ 3 ] { LOW, NORMAL, HIGH };
+}
+variable ANAPHYLAXIS {
+  type discrete [ 2 ] { TRUE, FALSE };
+}
+variable TPR {
+  type discrete [ 3 ] { LOW, NORMAL, HIGH };
+}
+variable ARTCO2 {
+  type discrete [ 3 ] { LOW, NORMAL, HIGH };
+}
+variable EXPCO2 {
+  type discrete [ 4 ] { ZERO, LOW, NORMAL, HIGH };
+}
+variable VENTLUNG {
+  type discrete [ 4 ] { ZERO, LOW, NORMAL, HIGH };
+}
+variable INTUBATION {
+  type discrete [ 3 ] { LOW, NORMAL, HIGH };
+}
+variable MINVOL {
+  type discrete [ 4 ] { ZERO, LOW, NORMAL, HIGH };
+}
+variable FIO2 {
+  type discrete [ 2 ] { TRUE, FALSE };
+}
+variable PVSAT {
+  type discrete [ 3 ] { LOW, NORMAL, HIGH };
+}
+variable VENTALV {
+  type discrete [ 4 ] { ZERO, LOW, NORMAL, HIGH };
+}
+variable SAO2 {
+  type discrete [ 3 ] { LOW, NORMAL, HIGH };
+}
+variable SHUNT {
+  type discrete [ 2 ] { TRUE, FALSE };
+}
+variable PULMEMBOLUS {
+  type discrete [ 2 ] { TRUE, FALSE };
+}
+variable PAP {
+  type discrete [ 3 ] { LOW, NORMAL, HIGH };
+}
+variable PRESS {
+  type discrete [ 4 ] { ZERO, LOW, NORMAL, HIGH };
+}
+variable KINKEDTUBE {
+  type discrete [ 2 ] { TRUE, FALSE };
+}
+variable VENTTUBE {
+  type discrete [ 4 ] { ZERO, LOW, NORMAL, HIGH };
+}
+variable MINVOLSET {
+  type discrete [ 3 ] { LOW, NORMAL, HIGH };
+}
+variable VENTMACH {
+  type discrete [ 4 ] { ZERO, LOW, NORMAL, HIGH };
+}
+variable DISCONNECT {
+  type discrete [ 2 ] { TRUE, FALSE };
+}
+variable CATECHOL {
+  type discrete [ 2 ] { TRUE, FALSE };
+}
+variable INSUFFANESTH {
+  type discrete [ 2 ] { TRUE, FALSE };
+}
+variable CO {
+  type discrete [ 3 ] { LOW, NORMAL, HIGH };
+}
+variable BP {
+  type discrete [ 3 ] { LOW, NORMAL, HIGH };
+}
+probability ( LVFAILURE ) {
+  table 0.053125, 0.946875;
+}
+probability ( HISTORY ) {
+  table 0.0525, 0.9475;
+}
+probability ( LVEDVOLUME ) {
+  table 0.0925, 0.705, 0.2025;
+}
+probability ( CVP ) {
+  table 0.123125, 0.721875, 0.155;
+}
+probability ( PCWP ) {
+  table 0.120625, 0.68375, 0.195625;
+}
+probability ( HYPOVOLEMIA ) {
+  table 0.17375, 0.82625;
+}
+probability ( STROKEVOLUME ) {
+  table 0.169375, 0.786875, 0.04375;
+}
+probability ( ERRLOWOUTPUT ) {
+  table 0.05, 0.95;
+}
+probability ( HRBP ) {
+  table 0.17625, 0.059375, 0.764375;
+}
+probability ( HR ) {
+  table 0.009375, 0.17375, 0.816875;
+}
+probability ( ERRCAUTER ) {
+  table 0.100625, 0.899375;
+}
+probability ( HREKG ) {
+  table 0.1725, 0.095, 0.7325;
+}
+probability ( HRSAT ) {
+  table 0.17, 0.098125, 0.731875;
+}
+probability ( ANAPHYLAXIS ) {
+  table 0.010625, 0.989375;
+}
+probability ( TPR ) {
+  table 0.31125, 0.386875, 0.301875;
+}
+probability ( ARTCO2 ) {
+  table 0.185, 0.058125, 0.756875;
+}
+probability ( EXPCO2 ) {
+  table 0.0325, 0.873125, 0.050625, 0.04375;
+}
+probability ( VENTLUNG ) {
+  table 0.7325, 0.225625, 0.011875, 0.03;
+}
+probability ( INTUBATION ) {
+  table 0.93125, 0.031875, 0.036875;
+}
+probability ( MINVOL ) {
+  table 0.70875, 0.065625, 0.028125, 0.1975;
+}
+probability ( FIO2 ) {
+  table 0.04875, 0.95125;
+}
+probability ( PVSAT ) {
+  table 0.7925, 0.02625, 0.18125;
+}
+probability ( VENTALV ) {
+  table 0.699375, 0.070625, 0.035, 0.195;
+}
+probability ( SAO2 ) {
+  table 0.78375, 0.040625, 0.175625;
+}
+probability ( SHUNT ) {
+  table 0.918125, 0.081875;
+}
+probability ( PULMEMBOLUS ) {
+  table 0.005625, 0.994375;
+}
+probability ( PAP ) {
+  table 0.04375, 0.9, 0.05625;
+}
+probability ( PRESS ) {
+  table 0.024375, 0.25875, 0.225, 0.491875;
+}
+probability ( KINKEDTUBE ) {
+  table 0.0375, 0.9625;
+}
+probability ( VENTTUBE ) {
+  table 0.19, 0.731875, 0.01875, 0.059375;
+}
+probability ( MINVOLSET ) {
+  table 0.058125, 0.895625, 0.04625;
+}
+probability ( VENTMACH ) {
+  table 0.04125, 0.06375, 0.841875, 0.053125;
+}
+probability ( DISCONNECT ) {
+  table 0.095, 0.905;
+}
+probability ( CATECHOL ) {
+  table 0.105625, 0.894375;
+}
+probability ( INSUFFANESTH ) {
+  table 0.108125, 0.891875;
+}
+probability ( CO ) {
+  table 0.15875, 0.19125, 0.65;
+}
+probability ( BP ) {
+  table 0.375, 0.208125, 0.416875;
+}

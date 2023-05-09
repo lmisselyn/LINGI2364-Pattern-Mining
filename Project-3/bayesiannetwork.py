@@ -1,5 +1,5 @@
 import re
-
+import itertools
 import pandas as pd
 
 
@@ -160,9 +160,8 @@ class BayesianNetwork:
                 transac = x.copy()
                 transac[Y] = val
                 p_denominator += self.P_transaction(transac)
-            res_distrib[y] = p_numerator/p_denominator
+            res_distrib[y] = p_numerator / p_denominator
         return res_distrib
-
 
     def get_distrib_givenX_V2(self, Y, x={}):
         res_distrib = {}
@@ -180,9 +179,8 @@ class BayesianNetwork:
             transac[Y[0]] = dic[Y[0]]
             transac[Y[1]] = dic[Y[1]]
             p_numerator = self.P_transaction(transac)
-            res_distrib[str([dic[Y[0]], dic[Y[1]]])] = p_numerator/p_denominator
+            res_distrib[str([dic[Y[0]], dic[Y[1]]])] = p_numerator / p_denominator
         return res_distrib
-
 
     def get_combinations(self, Y):
         combi = []
@@ -191,22 +189,80 @@ class BayesianNetwork:
                 combi.append({Y[0]: y1, Y[1]: y2})
         return combi
 
-def structure_learning(filename, network_name):
-    values={2: "{ TRUE, FALSE };", 3: "{ LOW, NORMAL, HIGH };", 4: "{ ZERO, LOW, NORMAL, HIGH };" }
-    file = open("networks/"+network_name, "a")
+    def get_combinations2(self, variables):
+        arr = []
+        if len(variables) == 1:
+            for i in self.variables[variables[0].name].values:
+                arr.append([i])
+            return arr
+
+        for v in variables:
+            arr.append(self.variables[v.name].values)
+        combinations = list(itertools.product(*arr))
+        return combinations
+
+    def param_learning(self, variable, filename):
+        new_entry = {}
+        df = pd.read_csv(filename)
+        parents = self.variables[variable].cpt.parents
+        combinations = self.get_combinations2(parents)
+
+        for assignment in combinations:
+            int_values = []
+            for i in range(len(parents)):
+                p_values = parents[i].values
+                print(p_values)
+                for j in range(len(p_values)):
+                    if p_values[j] == assignment[i]:
+                        int_values.append(j)
+            print(int_values)
+            #for value in variable.values:
+            data = df.copy()
+            for i in range(len(parents)):
+                data = data.loc[df[parents[i].name] == int_values[i]]
+            print(data[parents[0].name])
+
+
+
+
+
+def structure_init(filename, network_name):
+    values = {2: "{ TRUE, FALSE };", 3: "{ LOW, NORMAL, HIGH };", 4: "{ ZERO, LOW, NORMAL, HIGH };"}
+    var_cardinality = {}
+    f = open("networks/" + network_name, "w")
     df = pd.read_csv(filename)
     variables = df.columns
     for v in variables:
         cardinality = len(df[v].unique())
-        file.write("variable "+v+" {\n  type discrete [")
+        var_cardinality[v]=cardinality
+        f.write("variable " + v + " {\n  type discrete [ " + str(cardinality) + " ] " + values[cardinality] + "\n}\n")
+    for v in variables:
+        c = var_cardinality[v]
+        count = {}
+        for i in range(c):
+            count[i] = 0
+        for i in df[v].values:
+            count[i] = count[i]+1
+        for k in count.keys():
+            count[k] = count[k]/len(df[v].values)
+        probs = ''
+        for i in range(c):
+            if i != c-1:
+                probs += str(count[i]) + ', '
+            else:
+                probs += str(count[i]) + ';'
+        f.write('probability ( '+v+' ) {\n  table '+probs+'\n}\n')
+
 
 
 
 # Example for how to read a BayesianNetwork
-#bn = BayesianNetwork("test.bif")
+# bn = BayesianNetwork("test.bif")
 
-#print(bn.get_distrib_givenX_V2(['FLU', 'FEVER'], {'FATIGUE': 'TRUE'}))
+# print(bn.get_distrib_givenX_V2(['FLU', 'FEVER'], {'FATIGUE': 'TRUE'}))
 
 if __name__ == '__main__':
+    #structure_init('datasets/alarm/train.csv', 'alarm_test.bif')
+    bn = BayesianNetwork('alarm.bif')
+    bn.param_learning('VENTMACH', 'datasets/alarm/train.csv')
 
-    structure_learning('datasets/alarm/train.csv')
