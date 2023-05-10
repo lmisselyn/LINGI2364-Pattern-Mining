@@ -191,22 +191,27 @@ class BayesianNetwork:
 
     def get_combinations2(self, variables):
         arr = []
+        '''
         if len(variables) == 1:
             for i in self.variables[variables[0].name].values:
-                arr.append([i])
+                arr.append((i,))
             return arr
-
+        '''
         for v in variables:
             arr.append(self.variables[v.name].values)
         combinations = list(itertools.product(*arr))
         return combinations
+
+    def get_values_from_cardinality(self, c):
+        values = {2: ['TRUE', 'FALSE'], 3: ['LOW', 'NORMAL', 'HIGH'], 4: ['ZERO', 'LOW', 'NORMAL', 'HIGH']}
+        return values[c]
 
     def param_learning(self, variable, filename):
         new_entry = {}
         df = pd.read_csv(filename)
         parents = self.variables[variable].cpt.parents
         combinations = self.get_combinations2(parents)
-
+        print(combinations)
         for assignment in combinations:
             int_values = []
             for i in range(len(parents)):
@@ -220,7 +225,21 @@ class BayesianNetwork:
             data = df.copy()
             for i in range(len(parents)):
                 data = data.loc[df[parents[i].name] == int_values[i]]
-            print(data[parents[0].name])
+            count = {}
+            c = len(self.variables[variable].values)
+            for i in range(c):
+                count[i] = 0
+            for i in data[variable].values:
+                count[i] = count[i] + 1
+            for k in count.keys():
+                count[k] = round((count[k] + 0.02) / (len(data[variable].values) + c*0.02), 5)
+            values = self.get_values_from_cardinality(c)
+            probs = {}
+            for i in range(c):
+                probs[values[i]] = count[i]
+            new_entry[assignment] = probs
+        print(new_entry)
+
 
 
 
@@ -264,5 +283,5 @@ def structure_init(filename, network_name):
 if __name__ == '__main__':
     #structure_init('datasets/alarm/train.csv', 'alarm_test.bif')
     bn = BayesianNetwork('alarm.bif')
-    bn.param_learning('VENTMACH', 'datasets/alarm/train.csv')
+    bn.param_learning('MINVOLSET', 'datasets/alarm/train.csv')
 
