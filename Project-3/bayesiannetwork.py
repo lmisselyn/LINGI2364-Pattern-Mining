@@ -1,5 +1,9 @@
+import math
+import random
 import re
 import itertools
+
+import numpy as np
 import pandas as pd
 
 
@@ -53,58 +57,61 @@ class BayesianNetwork:
     # Method for reading a Bayesian Network from a BIF file;
     # fills a dictionary 'variables' with variable names mapped to Variable
     # objects having CPT objects.
-    def __init__(self, input_file):
+    def __init__(self, input_file, datafile):
 
         with open(input_file) as f:
             lines = f.readlines()
 
+        self.data_file = datafile
+        self.assignements = self.get_assignments_from_file()
         self.variables = {}
         # The dictionary of variables, allowing quick lookup from a variable
         # name.
         for i in range(len(lines)):
             lines[i] = lines[i].lstrip().rstrip().replace('/', '-')
 
-        # Parsing all the variable definitions
-        i = 0
-        while not lines[i].startswith("probability"):
-            if lines[i].startswith("variable"):
-                variable_name = lines[i].rstrip().split(' ')[1]
+        if len(lines) != 0:
+            # Parsing all the variable definitions
+            i = 0
+            while not lines[i].startswith("probability"):
+                if lines[i].startswith("variable"):
+                    variable_name = lines[i].rstrip().split(' ')[1]
+                    i += 1
+                    variable_def = lines[i].rstrip().split(' ')
+                    # only discrete BN are supported
+                    assert (variable_def[1] == 'discrete')
+                    variable_values = [x for x in variable_def[6:-1]]
+                    for j in range(len(variable_values)):
+                        variable_values[j] = re.sub('\(|\)|,', '', variable_values[j])
+                    variable = Variable(variable_name, variable_values)
+                    self.variables[variable_name] = variable
                 i += 1
-                variable_def = lines[i].rstrip().split(' ')
-                # only discrete BN are supported
-                assert (variable_def[1] == 'discrete')
-                variable_values = [x for x in variable_def[6:-1]]
-                for j in range(len(variable_values)):
-                    variable_values[j] = re.sub('\(|\)|,', '', variable_values[j])
-                variable = Variable(variable_name, variable_values)
-                self.variables[variable_name] = variable
-            i += 1
 
-        # Parsing all the CPT definitions
-        while i < len(lines):
-            split = lines[i].split(' ')
-            target_variable_name = split[2]
-            variable = self.variables[target_variable_name]
+            # Parsing all the CPT definitions
+            while i < len(lines):
+                split = lines[i].split(' ')
+                target_variable_name = split[2]
+                variable = self.variables[target_variable_name]
 
-            parents = [self.variables[x.rstrip().lstrip().replace(',', '')] for x in split[4:-2]]
+                parents = [self.variables[x.rstrip().lstrip().replace(',', '')] for x in split[4:-2]]
 
-            assert (variable.name == split[2])
+                assert (variable.name == split[2])
 
-            cpt = CPT(variable, parents)
-            i += 1
-
-            nb_lines = 1
-            for p in parents:
-                nb_lines *= len(p.values)
-            for lid in range(nb_lines):
-                cpt_line = lines[i].split(' ')
-                # parent_values = [parents[j].values[re.sub('\(|\)|,', '', cpt_line[j])] for j in range(len(parents))]
-                parent_values = tuple([re.sub('\(|\)|,', '', cpt_line[j]) for j in range(len(parents))])
-                probabilities = re.findall("\d\.\d+(?:e-\d\d)?", lines[i])
-                cpt.entries[parent_values] = {v: float(p) for v, p in zip(variable.values, probabilities)}
+                cpt = CPT(variable, parents)
                 i += 1
-            variable.cpt = cpt
-            i += 1
+
+                nb_lines = 1
+                for p in parents:
+                    nb_lines *= len(p.values)
+                for lid in range(nb_lines):
+                    cpt_line = lines[i].split(' ')
+                    # parent_values = [parents[j].values[re.sub('\(|\)|,', '', cpt_line[j])] for j in range(len(parents))]
+                    parent_values = tuple([re.sub('\(|\)|,', '', cpt_line[j]) for j in range(len(parents))])
+                    probabilities = re.findall("\d\.\d+(?:e-\d\d)?", lines[i])
+                    cpt.entries[parent_values] = {v: float(p) for v, p in zip(variable.values, probabilities)}
+                    i += 1
+                variable.cpt = cpt
+                i += 1
 
     # Method for writing a Bayesian Network to an output file
     def write(self, filename):
@@ -141,8 +148,8 @@ class BayesianNetwork:
         for var in transaction.keys():
             var_parents = {}
             for pa in self.variables[var].cpt.parents:
-                var_parents[pa.name] = transaction[pa.name]
-            p_Xisx = self.P_Yisy_given_parents(var, transaction[var], var_parents)
+                var_parents[pa.name] = str(transaction[pa.name])
+            p_Xisx = self.P_Yisy_given_parents(var, str(transaction[var]), var_parents)
             p = p * p_Xisx
         return p
 
@@ -191,70 +198,62 @@ class BayesianNetwork:
 
     def get_combinations2(self, variables):
         arr = []
-        '''
-        if len(variables) == 1:
-            for i in self.variables[variables[0].name].values:
-                arr.append((i,))
-            return arr
-        '''
         for v in variables:
             arr.append(self.variables[v.name].values)
         combinations = list(itertools.product(*arr))
         return combinations
 
-    def get_values_from_cardinality(self, c):
-        values = {2: ['TRUE', 'FALSE'], 3: ['LOW', 'NORMAL', 'HIGH'], 4: ['ZERO', 'LOW', 'NORMAL', 'HIGH']}
-        return values[c]
+    def get_assignments_from_file(self):
+        df = pd.read_csv(self.data_file)
+        return df.to_dict(orient='records')
+
+    def get_score(self):
+        score = 0
+        for assignment in self.assignements:
+            proba = self.P_transaction(assignment)
+            score += math.log(proba)
+        return score
 
     def param_learning(self, variable, filename):
+        """
+        Compute the conditional probability table for the given variable
+        based on the bayesian network
+        :param variable: name of the variable of which we compute CPT
+        :param filename: name of the bayesian network
+        """
         new_entry = {}
         df = pd.read_csv(filename)
         parents = self.variables[variable].cpt.parents
         combinations = self.get_combinations2(parents)
-        print(combinations)
+
         for assignment in combinations:
-            int_values = []
-            for i in range(len(parents)):
-                p_values = parents[i].values
-                print(p_values)
-                for j in range(len(p_values)):
-                    if p_values[j] == assignment[i]:
-                        int_values.append(j)
-            print(int_values)
-            #for value in variable.values:
             data = df.copy()
             for i in range(len(parents)):
-                data = data.loc[df[parents[i].name] == int_values[i]]
+                data = data.loc[df[parents[i].name] == int(assignment[i])]
             count = {}
             c = len(self.variables[variable].values)
             for i in range(c):
-                count[i] = 0
+                count[str(i)] = 0
             for i in data[variable].values:
-                count[i] = count[i] + 1
+                count[str(i)] = count[str(i)] + 1
             for k in count.keys():
                 count[k] = round((count[k] + 0.02) / (len(data[variable].values) + c*0.02), 5)
-            values = self.get_values_from_cardinality(c)
-            probs = {}
-            for i in range(c):
-                probs[values[i]] = count[i]
-            new_entry[assignment] = probs
-        print(new_entry)
-
-
-
-
+            new_entry[assignment] = count
+        self.variables[variable].cpt.entries = new_entry
 
 
 def structure_init(filename, network_name):
-    values = {2: "{ TRUE, FALSE };", 3: "{ LOW, NORMAL, HIGH };", 4: "{ ZERO, LOW, NORMAL, HIGH };"}
+    """
+    Build a simple Bayesian network with each node independent
+    """
     var_cardinality = {}
     f = open("networks/" + network_name, "w")
     df = pd.read_csv(filename)
     variables = df.columns
     for v in variables:
         cardinality = len(df[v].unique())
-        var_cardinality[v]=cardinality
-        f.write("variable " + v + " {\n  type discrete [ " + str(cardinality) + " ] " + values[cardinality] + "\n}\n")
+        var_cardinality[v] = cardinality
+        f.write("variable " + v + " {\n  type discrete [ " + str(cardinality) + " ] " + str(set(np.arange(cardinality))) + ";\n}\n")
     for v in variables:
         c = var_cardinality[v]
         count = {}
@@ -272,16 +271,56 @@ def structure_init(filename, network_name):
                 probs += str(count[i]) + ';'
         f.write('probability ( '+v+' ) {\n  table '+probs+'\n}\n')
 
+def structure_init_v2(network_name, filename):
+    f = open("networks/" + network_name, 'w')
+    f.close()
+    new_bn = BayesianNetwork("networks/" + network_name, filename)
+    df = pd.read_csv(filename)
+    variables = df.columns
+    for v in variables:
+        c = len(df[v].unique())
+        count = {}
+        for i in range(c):
+            count[i] = 0
+        for i in df[v].values:
+            count[i] = count[i] + 1
+        for k in count.keys():
+            count[k] = count[k] / len(df[v].values)
+
+        new_var = Variable(v, [str(v) for v in np.arange(c)])
+        new_cpt = CPT(new_var, [])
+        new_cpt.entries = {tuple(): count}
+        new_var.cpt = new_cpt
+        new_bn.variables[v] = new_var
+    new_bn.write("networks/" + network_name)
 
 
+def local_search(network, max_iter):
+    best_score = network.get_score()
+    network.write('best_network.bif')
+    for i in range(max_iter):
+        network = BayesianNetwork('best_network.bif', network.data_file)
+        independent_var = [var for var in network.variables.keys() if not network.variables[var].cpt.parents]
+        if not independent_var:
+            break
+        selected = random.choice(independent_var)
+        target_var = random.choice([var for var in network.variables.keys() if var != selected])
+        network.variables[selected].cpt.parents.append(network.variables[target_var])
+        network.param_learning(selected, network.data_file)
+        score = network.get_score()
+        if score > best_score:
+            best_score = score
+            network.write('best_network.bif')
+
+
+
+    network.write('local_search.bif')
 
 # Example for how to read a BayesianNetwork
-# bn = BayesianNetwork("test.bif")
-
-# print(bn.get_distrib_givenX_V2(['FLU', 'FEVER'], {'FATIGUE': 'TRUE'}))
+#
 
 if __name__ == '__main__':
-    #structure_init('datasets/alarm/train.csv', 'alarm_test.bif')
-    bn = BayesianNetwork('alarm.bif')
-    bn.param_learning('MINVOLSET', 'datasets/alarm/train.csv')
+    #structure_init_v2('alarm_test.bif', 'datasets/alarm/train.csv')
+    bn = BayesianNetwork('networks/alarm_test.bif', 'datasets/alarm/train.csv')
+    local_search(bn, 10)
 

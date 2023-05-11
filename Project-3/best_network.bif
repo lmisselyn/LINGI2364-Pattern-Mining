@@ -112,14 +112,18 @@ variable BP {
 probability ( LVFAILURE ) {
   table 0.053125, 0.946875;
 }
-probability ( HISTORY ) {
-  table 0.0525, 0.9475;
+probability ( HISTORY | VENTMACH ) {
+  (0) 0.0003, 0.9997;
+  (1) 0.0296, 0.9704;
+  (2) 0.05643, 0.94357;
+  (3) 0.05903, 0.94097;
 }
 probability ( LVEDVOLUME ) {
   table 0.0925, 0.705, 0.2025;
 }
-probability ( CVP ) {
-  table 0.123125, 0.721875, 0.155;
+probability ( CVP | HISTORY ) {
+  (0) 0.82108, 0.1073, 0.07162;
+  (1) 0.08444, 0.75592, 0.15964;
 }
 probability ( PCWP ) {
   table 0.120625, 0.68375, 0.195625;
@@ -127,8 +131,10 @@ probability ( PCWP ) {
 probability ( HYPOVOLEMIA ) {
   table 0.17375, 0.82625;
 }
-probability ( STROKEVOLUME ) {
-  table 0.169375, 0.786875, 0.04375;
+probability ( STROKEVOLUME | SAO2 ) {
+  (0) 0.16827, 0.78945, 0.04228;
+  (1) 0.15401, 0.79957, 0.04642;
+  (2) 0.17797, 0.77215, 0.04988;
 }
 probability ( ERRLOWOUTPUT ) {
   table 0.05, 0.95;
@@ -154,8 +160,9 @@ probability ( ANAPHYLAXIS ) {
 probability ( TPR ) {
   table 0.31125, 0.386875, 0.301875;
 }
-probability ( ARTCO2 ) {
-  table 0.185, 0.058125, 0.756875;
+probability ( ARTCO2 | LVFAILURE ) {
+  (0) 0.18834, 0.07077, 0.74089;
+  (1) 0.18482, 0.05744, 0.75774;
 }
 probability ( EXPCO2 ) {
   table 0.0325, 0.873125, 0.050625, 0.04375;
@@ -163,8 +170,10 @@ probability ( EXPCO2 ) {
 probability ( VENTLUNG ) {
   table 0.7325, 0.225625, 0.011875, 0.03;
 }
-probability ( INTUBATION ) {
-  table 0.93125, 0.031875, 0.036875;
+probability ( INTUBATION | TPR ) {
+  (0) 0.94169, 0.03216, 0.02614;
+  (1) 0.92078, 0.04042, 0.0388;
+  (2) 0.93367, 0.02074, 0.04558;
 }
 probability ( MINVOL ) {
   table 0.70875, 0.065625, 0.028125, 0.1975;
@@ -181,14 +190,18 @@ probability ( VENTALV ) {
 probability ( SAO2 ) {
   table 0.78375, 0.040625, 0.175625;
 }
-probability ( SHUNT ) {
-  table 0.918125, 0.081875;
+probability ( SHUNT | VENTMACH ) {
+  (0) 0.9997, 0.0003;
+  (1) 0.9018, 0.0982;
+  (2) 0.91536, 0.08464;
+  (3) 0.91745, 0.08255;
 }
 probability ( PULMEMBOLUS ) {
   table 0.005625, 0.994375;
 }
-probability ( PAP ) {
-  table 0.04375, 0.9, 0.05625;
+probability ( PAP | ANAPHYLAXIS ) {
+  (0) 0.00117, 0.99766, 0.00117;
+  (1) 0.04423, 0.8989, 0.05686;
 }
 probability ( PRESS ) {
   table 0.024375, 0.25875, 0.225, 0.491875;
@@ -202,20 +215,24 @@ probability ( VENTTUBE ) {
 probability ( MINVOLSET ) {
   table 0.058125, 0.895625, 0.04625;
 }
-probability ( VENTMACH ) {
-  table 0.04125, 0.06375, 0.841875, 0.053125;
+probability ( VENTMACH | HR ) {
+  (0) 0.13395, 0.00133, 0.8634, 0.00133;
+  (1) 0.05042, 0.10436, 0.75165, 0.09357;
+  (2) 0.03827, 0.05586, 0.86071, 0.04515;
 }
 probability ( DISCONNECT ) {
   table 0.095, 0.905;
 }
-probability ( CATECHOL ) {
-  table 0.105625, 0.894375;
+probability ( CATECHOL | DISCONNECT ) {
+  (0) 0.2698, 0.7302;
+  (1) 0.08841, 0.91159;
 }
 probability ( INSUFFANESTH ) {
   table 0.108125, 0.891875;
 }
-probability ( CO ) {
-  table 0.15875, 0.19125, 0.65;
+probability ( CO | INSUFFANESTH ) {
+  (0) 0.13302, 0.15035, 0.71663;
+  (1) 0.16189, 0.19622, 0.64189;
 }
 probability ( BP ) {
   table 0.375, 0.208125, 0.416875;
