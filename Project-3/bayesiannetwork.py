@@ -62,6 +62,7 @@ class BayesianNetwork:
         with open(input_file) as f:
             lines = f.readlines()
 
+        self.input_file = input_file
         self.data_file = datafile
         self.assignements = self.get_assignments_from_file()
         self.variables = {}
@@ -144,6 +145,10 @@ class BayesianNetwork:
         return P
 
     def P_transaction(self, transaction):
+        """
+        :param transaction: assignment to every variable of the network
+        :return: probability of such an assignment
+        """
         p = 1
         for var in transaction.keys():
             var_parents = {}
@@ -154,6 +159,11 @@ class BayesianNetwork:
         return p
 
     def get_distrib_givenX(self, Y, x={}):
+        """
+        :param Y: one variable
+        :param x: assignments for all other variables
+        :return: distribution probability for all possibles assignments of Y
+        """
         res_distrib = {}
         CPT = self.variables[Y].cpt
         # Joint distribution
@@ -170,33 +180,38 @@ class BayesianNetwork:
             res_distrib[y] = p_numerator / p_denominator
         return res_distrib
 
-    def get_distrib_givenX_V2(self, Y, x={}):
+    def get_distrib_givenX_double(self, Y, x={}):
+        """
+        :param Y: two variables
+        :param x: assignments for all other variables
+        :return: distribution probability for all possibles assignments of Y
+        """
         res_distrib = {}
-        combinaisons = self.get_combinations(Y)
+        new_Y = []
+        for v in Y:
+            new_Y.append(self.variables[v])
+        combinaisons = self.get_combinations(new_Y)
         # denominator
         p_denominator = 0
-        for dic in combinaisons:
+        for tup in combinaisons:
             transac = x.copy()
-            transac[Y[0]] = dic[Y[0]]
-            transac[Y[1]] = dic[Y[1]]
+            transac[Y[0]] = tup[0]
+            transac[Y[1]] = tup[1]
             p_denominator += self.P_transaction(transac)
         # numerator
-        for dic in combinaisons:
+        for tup in combinaisons:
             transac = x.copy()
-            transac[Y[0]] = dic[Y[0]]
-            transac[Y[1]] = dic[Y[1]]
+            transac[Y[0]] = tup[0]
+            transac[Y[1]] = tup[1]
             p_numerator = self.P_transaction(transac)
-            res_distrib[str([dic[Y[0]], dic[Y[1]]])] = p_numerator / p_denominator
+            res_distrib[(tup[0], tup[1])] = p_numerator / p_denominator
         return res_distrib
 
-    def get_combinations(self, Y):
-        combi = []
-        for y1 in self.variables[Y[0]].values:
-            for y2 in self.variables[Y[1]].values:
-                combi.append({Y[0]: y1, Y[1]: y2})
-        return combi
-
-    def get_combinations2(self, variables):
+    def get_combinations(self, variables):
+        """
+        :param variables:
+        :return: All possibles assignments for these variables
+        """
         arr = []
         for v in variables:
             arr.append(self.variables[v.name].values)
@@ -204,27 +219,33 @@ class BayesianNetwork:
         return combinations
 
     def get_assignments_from_file(self):
+        """
+        :return: each row of the datafile as a dictionary
+        """
         df = pd.read_csv(self.data_file)
         return df.to_dict(orient='records')
 
     def get_score(self):
+        """
+        :return: Compute de score of the network
+        """
         score = 0
         for assignment in self.assignements:
             proba = self.P_transaction(assignment)
             score += math.log(proba)
         return score
 
-    def param_learning(self, variable, filename):
+    def param_learning(self, variable, network_name):
         """
         Compute the conditional probability table for the given variable
         based on the bayesian network
         :param variable: name of the variable of which we compute CPT
-        :param filename: name of the bayesian network
+        :param network_name: name of the bayesian network
         """
         new_entry = {}
-        df = pd.read_csv(filename)
+        df = pd.read_csv(network_name)
         parents = self.variables[variable].cpt.parents
-        combinations = self.get_combinations2(parents)
+        combinations = self.get_combinations(parents)
 
         for assignment in combinations:
             data = df.copy()
@@ -237,41 +258,17 @@ class BayesianNetwork:
             for i in data[variable].values:
                 count[str(i)] = count[str(i)] + 1
             for k in count.keys():
-                count[k] = round((count[k] + 0.02) / (len(data[variable].values) + c*0.02), 5)
+                count[k] = round((count[k] + 0.02) / (len(data[variable].values) + c * 0.02), 4)
             new_entry[assignment] = count
         self.variables[variable].cpt.entries = new_entry
 
 
-def structure_init(filename, network_name):
+def structure_init(network_name, filename):
     """
-    Build a simple Bayesian network with each node independent
+    :param network_name: name of the inatiated network
+    :param filename: Name of the csv file containing data
+    :return: Initiate a Bayesian network with independent nodes
     """
-    var_cardinality = {}
-    f = open("networks/" + network_name, "w")
-    df = pd.read_csv(filename)
-    variables = df.columns
-    for v in variables:
-        cardinality = len(df[v].unique())
-        var_cardinality[v] = cardinality
-        f.write("variable " + v + " {\n  type discrete [ " + str(cardinality) + " ] " + str(set(np.arange(cardinality))) + ";\n}\n")
-    for v in variables:
-        c = var_cardinality[v]
-        count = {}
-        for i in range(c):
-            count[i] = 0
-        for i in df[v].values:
-            count[i] = count[i]+1
-        for k in count.keys():
-            count[k] = count[k]/len(df[v].values)
-        probs = ''
-        for i in range(c):
-            if i != c-1:
-                probs += str(count[i]) + ', '
-            else:
-                probs += str(count[i]) + ';'
-        f.write('probability ( '+v+' ) {\n  table '+probs+'\n}\n')
-
-def structure_init_v2(network_name, filename):
     f = open("networks/" + network_name, 'w')
     f.close()
     new_bn = BayesianNetwork("networks/" + network_name, filename)
@@ -286,7 +283,6 @@ def structure_init_v2(network_name, filename):
             count[i] = count[i] + 1
         for k in count.keys():
             count[k] = count[k] / len(df[v].values)
-
         new_var = Variable(v, [str(v) for v in np.arange(c)])
         new_cpt = CPT(new_var, [])
         new_cpt.entries = {tuple(): count}
@@ -295,7 +291,13 @@ def structure_init_v2(network_name, filename):
     new_bn.write("networks/" + network_name)
 
 
-def local_search(network, max_iter):
+def local_search(network, max_iter, network_name):
+    """
+    :param network: simple Bayesian network
+    :param max_iter: max interation
+    :param network_name: emplacement for the improved network
+    """
+    cnt = 0
     best_score = network.get_score()
     network.write('best_network.bif')
     for i in range(max_iter):
@@ -308,19 +310,32 @@ def local_search(network, max_iter):
         network.variables[selected].cpt.parents.append(network.variables[target_var])
         network.param_learning(selected, network.data_file)
         score = network.get_score()
-        if score > best_score:
+        if score > best_score and cnt < 3:
+            if abs(score - best_score) < 0.001:
+                cnt += 1
+            else:
+                cnt = 0
             best_score = score
             network.write('best_network.bif')
+        else:
+            break
+    best = BayesianNetwork('best_network.bif', network.data_file)
+    best.write(network_name)
 
-
-
-    network.write('local_search.bif')
 
 # Example for how to read a BayesianNetwork
 #
 
 if __name__ == '__main__':
-    #structure_init_v2('alarm_test.bif', 'datasets/alarm/train.csv')
-    bn = BayesianNetwork('networks/alarm_test.bif', 'datasets/alarm/train.csv')
-    local_search(bn, 10)
+    '''
+    structure_init('asia.bif', 'datasets/asia/train.csv')
+    bn = BayesianNetwork('networks/asia.bif', 'datasets/asia/train.csv')
+    local_search(bn, 100, 'networks/asia.bif')
+    bn = BayesianNetwork('networks/asia.bif', 'datasets/asia/train.csv')
+    print(bn.get_distrib_givenX_double(['lung', 'tub'], {'smoke':0,  'asia':1, 'lung':1, 'bronc':1, 'either':0, 'xray':1, 'dysp':0}))
+    print(bn.get_distrib_givenX('smoke', {'tub': 1, 'asia':1, 'lung':1, 'bronc':1, 'either':0, 'xray':1, 'dysp':0}))
+    '''
 
+    structure_init('andes.bif', 'datasets/andes/train.csv')
+    bn = BayesianNetwork('networks/andes.bif', 'datasets/andes/train.csv')
+    local_search(bn, 1000, 'networks/andes.bif')
