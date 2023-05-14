@@ -265,7 +265,7 @@ class BayesianNetwork:
 
 def structure_init(network_name, filename):
     """
-    :param network_name: name of the inatiated network
+    :param network_name: name of the initiated network
     :param filename: Name of the csv file containing data
     :return: Initiate a Bayesian network with independent nodes
     """
@@ -324,7 +324,47 @@ def local_search(network, max_iter, network_name):
 
 
 # Example for how to read a BayesianNetwork
-#
+
+def missing_value_imputation(network,test_file,file):
+    """
+    :param network: The best bayesian network
+    :param test_file: the path to the file with missing values
+    :param file: datafile of the improved network
+    """
+    df = pd.read_csv(test_file)
+    val = df.to_dict(orient='records')
+       
+    net = BayesianNetwork(network,file)
+
+    for row in val:
+        if any(v is None or v != v for v in row.values()):
+
+            #values formating
+            d = row
+            d = {k: 1 if v == 1.0 else v for k, v in d.items()}
+            d = {k: 0 if v == 0.0 else v for k, v in d.items()}
+
+            nan_keys = [k for k, v in d.items() if isinstance(v, float)
+                        and math.isnan(v)]
+
+            not_nan_dict = {k: v for k, v in d.items() if not isinstance(
+                v, float) or not math.isnan(v)}
+            
+            #missing value imputation here
+            if len(nan_keys) == 1:
+                t = net.get_distrib_givenX(nan_keys[0], not_nan_dict)
+                m = max(t, key=t.get)
+                row[nan_keys[0]] = float(m)
+            else:
+                t = net.get_distrib_givenX_double(nan_keys, not_nan_dict)
+                m = max(t, key=t.get)
+                v1,v2 = m
+                y1,y2 = nan_keys
+                row[y1] = float(v1)
+                row[y2] = float(v2)
+    df2 = pd.DataFrame(val)
+    df2.to_csv('Imputed_values.csv',index=False)
+    
 
 if __name__ == '__main__':
     '''
@@ -336,6 +376,10 @@ if __name__ == '__main__':
     print(bn.get_distrib_givenX('smoke', {'tub': 1, 'asia':1, 'lung':1, 'bronc':1, 'either':0, 'xray':1, 'dysp':0}))
     '''
 
-    structure_init('andes.bif', 'datasets/andes/train.csv')
-    bn = BayesianNetwork('networks/andes.bif', 'datasets/andes/train.csv')
-    local_search(bn, 1000, 'networks/andes.bif')
+    structure_init('asia.bif', 'datasets/asia/train.csv')
+    bn = BayesianNetwork('networks/asia.bif', 'datasets/asia/train.csv')
+    local_search(bn, 100, 'networks/asia.bif')
+
+    #doing the missing value imputation according to the best bayesian network
+    missing_value_imputation(
+        'best_network.bif', 'datasets/asia/test.csv', 'datasets/asia/train.csv')
