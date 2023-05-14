@@ -224,10 +224,26 @@ class BayesianNetwork:
         """
         df = pd.read_csv(self.data_file)
         return df.to_dict(orient='records')
+    
+    def get_alternative_score(self):
+        """
+        :return: Compute de score of the network (sum of loglikelihood - number of parameters)
+        """
+        score = 0
+        for assignment in self.assignements:
+            proba = self.P_transaction(assignment)
+            score += math.log(proba)
+        param = 0
+        for v in self.variables:
+            if len(self.variables[v].cpt.parents):
+                param += 4
+            else:
+                param += 2
+        return score - param
 
     def get_score(self):
         """
-        :return: Compute de score of the network
+        :return: Compute the score of the network (sum of loglikelihood)
         """
         score = 0
         for assignment in self.assignements:
@@ -298,7 +314,8 @@ def local_search(network, max_iter, network_name):
     :param network_name: emplacement for the improved network
     """
     cnt = 0
-    best_score = network.get_score()
+    best_score = network.get_alternative_score()
+    print(best_score)
     network.write('best_network.bif')
     for i in range(max_iter):
         network = BayesianNetwork('best_network.bif', network.data_file)
@@ -309,7 +326,8 @@ def local_search(network, max_iter, network_name):
         target_var = random.choice([var for var in network.variables.keys() if var != selected])
         network.variables[selected].cpt.parents.append(network.variables[target_var])
         network.param_learning(selected, network.data_file)
-        score = network.get_score()
+        score = network.get_alternative_score()
+        print(score > best_score)
         if score > best_score and cnt < 3:
             if abs(score - best_score) < 0.001:
                 cnt += 1
@@ -319,6 +337,7 @@ def local_search(network, max_iter, network_name):
             network.write('best_network.bif')
         else:
             break
+    print(f"after {best_score}")
     best = BayesianNetwork('best_network.bif', network.data_file)
     best.write(network_name)
 
@@ -362,6 +381,7 @@ def missing_value_imputation(network,test_file,file):
                 y1,y2 = nan_keys
                 row[y1] = float(v1)
                 row[y2] = float(v2)
+
     df2 = pd.DataFrame(val)
     df2.to_csv('Imputed_values.csv',index=False)
     
@@ -381,5 +401,4 @@ if __name__ == '__main__':
     local_search(bn, 100, 'networks/asia.bif')
 
     #doing the missing value imputation according to the best bayesian network
-    missing_value_imputation(
-        'best_network.bif', 'datasets/asia/test.csv', 'datasets/asia/train.csv')
+    #missing_value_imputation('best_network.bif', 'datasets/asia/test.csv', 'datasets/asia/train.csv')
