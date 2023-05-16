@@ -1,0 +1,70 @@
+variable Erk {
+  type discrete [ 3 ] { 0, 1, 2 };
+}
+variable Akt {
+  type discrete [ 3 ] { 0, 1, 2 };
+}
+variable PKA {
+  type discrete [ 3 ] { 0, 1, 2 };
+}
+variable Mek {
+  type discrete [ 3 ] { 0, 1, 2 };
+}
+variable Jnk {
+  type discrete [ 3 ] { 0, 1, 2 };
+}
+variable PKC {
+  type discrete [ 3 ] { 0, 1, 2 };
+}
+variable Raf {
+  type discrete [ 3 ] { 0, 1, 2 };
+}
+variable P38 {
+  type discrete [ 3 ] { 0, 1, 2 };
+}
+variable PIP3 {
+  type discrete [ 3 ] { 0, 1, 2 };
+}
+variable PIP2 {
+  type discrete [ 3 ] { 0, 1, 2 };
+}
+variable Plcg {
+  type discrete [ 3 ] { 0, 1, 2 };
+}
+probability ( Erk ) {
+  table 0.133125, 0.598125, 0.26875;
+}
+probability ( Akt | PKA ) {
+  (0) 0.3206, 0.2349, 0.4444;
+  (1) 0.6484, 0.3479, 0.0037;
+  (2) 0.7788, 0.2211, 0.0001;
+}
+probability ( PKA ) {
+  table 0.196875, 0.684375, 0.11875;
+}
+probability ( Mek ) {
+  table 0.58375, 0.301875, 0.114375;
+}
+probability ( Jnk ) {
+  table 0.55125, 0.36625, 0.0825;
+}
+probability ( PKC ) {
+  table 0.419375, 0.48875, 0.091875;
+}
+probability ( Raf ) {
+  table 0.521875, 0.28125, 0.196875;
+}
+probability ( P38 ) {
+  table 0.750625, 0.13375, 0.115625;
+}
+probability ( PIP3 ) {
+  table 0.22125, 0.419375, 0.359375;
+}
+probability ( PIP2 ) {
+  table 0.84375, 0.09375, 0.0625;
+}
+probability ( Plcg | Raf ) {
+  (0) 0.8, 0.1018, 0.0982;
+  (1) 0.8133, 0.0689, 0.1178;
+  (2) 0.8253, 0.0635, 0.1112;
+}

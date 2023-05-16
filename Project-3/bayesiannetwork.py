@@ -5,6 +5,8 @@ import itertools
 
 import numpy as np
 import pandas as pd
+#from sklearn.metrics import accuracy_score
+
 
 
 # A class for representing the Conditional Probability Tables of a variable
@@ -362,6 +364,8 @@ def missing_value_imputation(network,test_file,file):
             d = row
             d = {k: 1 if v == 1.0 else v for k, v in d.items()}
             d = {k: 0 if v == 0.0 else v for k, v in d.items()}
+            d = {k: 2 if v == 2.0 else v for k, v in d.items()}
+            d = {k: 3 if v == 3.0 else v for k, v in d.items()}
 
             nan_keys = [k for k, v in d.items() if isinstance(v, float)
                         and math.isnan(v)]
@@ -383,7 +387,7 @@ def missing_value_imputation(network,test_file,file):
                 row[y2] = float(v2)
 
     df2 = pd.DataFrame(val)
-    df2.to_csv('Imputed_values.csv',index=False)
+    df2.to_csv('datasets/water/Imputed_values.csv', index=False)
     
 
 if __name__ == '__main__':
@@ -396,9 +400,16 @@ if __name__ == '__main__':
     print(bn.get_distrib_givenX('smoke', {'tub': 1, 'asia':1, 'lung':1, 'bronc':1, 'either':0, 'xray':1, 'dysp':0}))
     '''
 
-    structure_init('asia.bif', 'datasets/asia/train.csv')
-    bn = BayesianNetwork('networks/asia.bif', 'datasets/asia/train.csv')
-    local_search(bn, 100, 'networks/asia.bif')
+    structure_init('water.bif', 'datasets/water/train.csv')
+    bn = BayesianNetwork('networks/water.bif',
+                         'datasets/water/train.csv')
+    local_search(bn, 100, 'networks/water.bif')
 
     #doing the missing value imputation according to the best bayesian network
-    #missing_value_imputation('best_network.bif', 'datasets/asia/test.csv', 'datasets/asia/train.csv')
+    #missing_value_imputation('best_network.bif', 'datasets/water/test_missing.csv', 'datasets/water/train.csv')
+
+    """ df_test = pd.read_csv("datasets/asia/test.csv")
+
+    df_pred = pd.read_csv("Imputed_values.csv")
+    df_pred =df_pred.astype(int)
+    print(f"Accuracy of {accuracy_score(df_test,df_pred)}") """
