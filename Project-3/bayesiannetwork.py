@@ -294,6 +294,7 @@ def structure_init(network_name, filename):
     variables = df.columns
     for v in variables:
         c = len(df[v].unique())
+        print(v)
         count = {}
         for i in range(c):
             count[i] = 0
@@ -400,15 +401,15 @@ if __name__ == '__main__':
     print(bn.get_distrib_givenX('smoke', {'tub': 1, 'asia':1, 'lung':1, 'bronc':1, 'either':0, 'xray':1, 'dysp':0}))
     '''
 
-    structure_init('water.bif', 'datasets/water/train.csv')
-    bn = BayesianNetwork('networks/water.bif',
-                         'datasets/water/train.csv')
-    local_search(bn, 100, 'networks/water.bif')
+    structure_init('stormofswords.bif', 'datasets/stormofswords/train.csv')
+    bn = BayesianNetwork('networks/stormofswords.bif',
+                         'datasets/stormofswords/train.csv')
+    local_search(bn, 100, 'networks/stormofswords.bif')
 
     #doing the missing value imputation according to the best bayesian network
-    #missing_value_imputation('best_network.bif', 'datasets/water/test_missing.csv', 'datasets/water/train.csv')
-
-    """ df_test = pd.read_csv("datasets/asia/test.csv")
+    missing_value_imputation('best_network.bif', 'datasets/water/test_missing.csv', 'datasets/water/train.csv')
+    
+    """ df_test = pd.read_csv("datasets/stormofswords/test.csv")
 
     df_pred = pd.read_csv("Imputed_values.csv")
     df_pred =df_pred.astype(int)
