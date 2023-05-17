@@ -1210,9 +1210,8 @@ probability ( EQUAL71 ) {
 probability ( SNode_120 ) {
   table 0.904375, 0.095625;
 }
-probability ( GOAL_121 | GOAL_127 ) {
-  (0) 0.6673, 0.3327;
-  (1) 0.6356, 0.3644;
+probability ( GOAL_121 ) {
+  table 0.3425, 0.6575;
 }
 probability ( GOAL72 ) {
   table 0.501875, 0.498125;

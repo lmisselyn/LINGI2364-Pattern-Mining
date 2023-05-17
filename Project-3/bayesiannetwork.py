@@ -5,7 +5,8 @@ import itertools
 
 import numpy as np
 import pandas as pd
-#from sklearn.metrics import accuracy_score
+import matplotlib.pyplot as plt
+from sklearn.metrics import accuracy_score
 
 
 
@@ -391,8 +392,27 @@ def missing_value_imputation(network,test_file,file):
                 row[y2] = float(v2)
 
     df2 = pd.DataFrame(val)
-    df2.to_csv('datasets/water/Imputed_values.csv', index=False)
-    
+    df2.to_csv('datasets/asia/Imputed_values.csv', index=False)
+
+def accuracy(df_A, df_B):
+    # Vérifier si les DataFrames ont la même taille
+    if df_A.shape != df_B.shape:
+        raise ValueError("Les DataFrames doivent avoir la même taille.")
+
+    total_rows = df_A.shape[0]
+    num_identical_rows = 0
+
+    # Parcourir les lignes des DataFrames
+    for i in range(total_rows):
+        row_A = df_A.iloc[i]
+        row_B = df_B.iloc[i]
+
+        # Comparer les valeurs des deux lignes
+        if row_A.equals(row_B):
+            num_identical_rows += 1
+
+    accuracy = num_identical_rows / total_rows
+    return accuracy
 
 if __name__ == '__main__':
     '''
@@ -404,16 +424,33 @@ if __name__ == '__main__':
     print(bn.get_distrib_givenX('smoke', {'tub': 1, 'asia':1, 'lung':1, 'bronc':1, 'either':0, 'xray':1, 'dysp':0}))
     '''
 
-    structure_init('water.bif', 'datasets/water/train.csv')
-    bn = BayesianNetwork('networks/water.bif',
-                         'datasets/water/train.csv')
-    local_search(bn, 1000, 'networks/water.bif')
+    """ structure_init('asia.bif', 'datasets/asia/train.csv')
+    bn = BayesianNetwork('networks/asia.bif',
+                         'datasets/asia/train.csv')
+    local_search(bn, 1000, 'networks/asia.bif')
 
     #doing the missing value imputation according to the best bayesian network
-    missing_value_imputation('best_network.bif', 'datasets/water/test_missing.csv', 'datasets/water/train.csv')
-    
-    """ df_test = pd.read_csv("datasets/stormofswords/test.csv")
+    missing_value_imputation(
+        'best_network.bif', 'datasets/asia/test_missing.csv', 'datasets/asia/train.csv') """
 
-    df_pred = pd.read_csv("Imputed_values.csv")
-    df_pred =df_pred.astype(int)
-    print(f"Accuracy of {accuracy_score(df_test,df_pred)}") """
+    files = ["alarm","andes","asia","random","sachs","sprinkler","water"]
+    accs = {}
+    for f in files :
+        df_test = pd.read_csv(f"datasets/{f}/test.csv")
+        df_pred = pd.read_csv(f"datasets/{f}/Imputed_values.csv")
+        df_pred =df_pred.astype('int64')
+        acc = accuracy(df_test,df_pred)
+        print(f"Accuracy of {acc} for the dataset {f}")
+        accs[f] = acc
+    keys = list(accs.keys())
+    values = list(accs.values())
+
+    # Création du graphique en barres
+    plt.bar(keys, values)
+    plt.xlabel('Files')
+    plt.ylabel('Accuracy')
+    plt.title('Bayesian network prediction accuracy')
+
+    # Affichage du graphique
+    plt.show()
+    plt.savefig("plot.png")
