@@ -271,7 +271,8 @@ class BayesianNetwork:
                 data = data.loc[df[parents[i].name] == int(assignment[i])]
             count = {}
             c = len(self.variables[variable].values)
-            for i in range(c):
+
+            for i in self.variables[variable].values:
                 count[str(i)] = 0
             for i in data[variable].values:
                 count[str(i)] = count[str(i)] + 1
@@ -293,16 +294,17 @@ def structure_init(network_name, filename):
     df = pd.read_csv(filename)
     variables = df.columns
     for v in variables:
-        c = len(df[v].unique())
-        print(v)
+        uniques = df[v].unique()
+        uniques.sort()
+
         count = {}
-        for i in range(c):
+        for i in df[v].unique():
             count[i] = 0
         for i in df[v].values:
             count[i] = count[i] + 1
         for k in count.keys():
             count[k] = count[k] / len(df[v].values)
-        new_var = Variable(v, [str(v) for v in np.arange(c)])
+        new_var = Variable(v, [str(v) for v in uniques])
         new_cpt = CPT(new_var, [])
         new_cpt.entries = {tuple(): count}
         new_var.cpt = new_cpt
@@ -317,6 +319,7 @@ def local_search(network, max_iter, network_name):
     :param network_name: emplacement for the improved network
     """
     cnt = 0
+
     best_score = network.get_alternative_score()
     print(best_score)
     network.write('best_network.bif')
@@ -401,10 +404,10 @@ if __name__ == '__main__':
     print(bn.get_distrib_givenX('smoke', {'tub': 1, 'asia':1, 'lung':1, 'bronc':1, 'either':0, 'xray':1, 'dysp':0}))
     '''
 
-    structure_init('stormofswords.bif', 'datasets/stormofswords/train.csv')
-    bn = BayesianNetwork('networks/stormofswords.bif',
-                         'datasets/stormofswords/train.csv')
-    local_search(bn, 100, 'networks/stormofswords.bif')
+    structure_init('water.bif', 'datasets/water/train.csv')
+    bn = BayesianNetwork('networks/water.bif',
+                         'datasets/water/train.csv')
+    local_search(bn, 1000, 'networks/water.bif')
 
     #doing the missing value imputation according to the best bayesian network
     missing_value_imputation('best_network.bif', 'datasets/water/test_missing.csv', 'datasets/water/train.csv')
