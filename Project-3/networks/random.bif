@@ -13,23 +13,18 @@ variable D {
 variable E {
   type discrete [ 2 ] { 0, 1 };
 }
-probability ( A | B ) {
-  (0) 0.5045, 0.4955;
-  (1) 0.503, 0.497;
+probability ( A ) {
+  table 0.50375, 0.49625;
 }
-probability ( B | E ) {
-  (0) 0.4414, 0.5586;
-  (1) 0.5252, 0.4748;
+probability ( B ) {
+  table 0.481875, 0.518125;
 }
-probability ( C | A ) {
-  (0) 0.4628, 0.5372;
-  (1) 0.4937, 0.5063;
+probability ( C ) {
+  table 0.478125, 0.521875;
 }
-probability ( D | C ) {
-  (0) 0.485, 0.515;
-  (1) 0.4862, 0.5138;
+probability ( D ) {
+  table 0.485625, 0.514375;
 }
-probability ( E | D ) {
-  (0) 0.5045, 0.4955;
-  (1) 0.5286, 0.4714;
+probability ( E ) {
+  table 0.483125, 0.516875;
 }

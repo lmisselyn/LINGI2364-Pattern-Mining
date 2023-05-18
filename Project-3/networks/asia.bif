@@ -22,33 +22,33 @@ variable xray {
 variable dysp {
   type discrete [ 2 ] { 0, 1 };
 }
-probability ( asia | dysp ) {
-  (0) 0.0099, 0.9901;
-  (1) 0.009, 0.991;
+probability ( asia | xray ) {
+  (0) 0.0063, 0.9937;
+  (1) 0.0097, 0.9903;
 }
 probability ( tub | dysp ) {
   (0) 0.0127, 0.9873;
   (1) 0.0045, 0.9955;
 }
-probability ( smoke | bronc ) {
-  (0) 0.6695, 0.3305;
-  (1) 0.3905, 0.6095;
+probability ( smoke | either ) {
+  (0) 0.8436, 0.1564;
+  (1) 0.494, 0.506;
 }
-probability ( lung | tub ) {
-  (0) 0.1549, 0.8451;
-  (1) 0.0523, 0.9477;
+probability ( lung | smoke ) {
+  (0) 0.0935, 0.9065;
+  (1) 0.0103, 0.9897;
 }
-probability ( bronc | smoke ) {
-  (0) 0.5801, 0.4199;
-  (1) 0.3041, 0.6959;
+probability ( bronc | either ) {
+  (0) 0.5625, 0.4375;
+  (1) 0.4388, 0.5612;
 }
-probability ( either | lung ) {
-  (0) 0.9998, 0.0002;
-  (1) 0.0073, 0.9927;
+probability ( either | smoke ) {
+  (0) 0.0983, 0.9017;
+  (1) 0.0194, 0.9806;
 }
-probability ( xray | dysp ) {
-  (0) 0.127, 0.873;
-  (1) 0.0808, 0.9192;
+probability ( xray | lung ) {
+  (0) 0.9762, 0.0238;
+  (1) 0.0522, 0.9478;
 }
 probability ( dysp | smoke ) {
   (0) 0.5534, 0.4466;

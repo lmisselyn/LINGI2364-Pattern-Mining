@@ -12,7 +12,7 @@ Jojen,Meera,33
 Arya,Rickon,8
 Mance,Qhorin,10
 Loras,Margaery,9
-Jon Arryn,Lysa,5
+Jon_Arryn,Lysa,5
 Robb,Hodor,5
 Bran,Meera,54
 Aerys,Tywin,8
@@ -217,7 +217,7 @@ Tywin,Stannis,15
 Sansa,Shae,8
 Lysa,Tyrion,5
 Rattleshirt,Qhorin,6
-Jon Arryn,Robert,6
+Jon_Arryn,Robert,6
 Joffrey,Stannis,10
 Tyrion,Meryn,5
 Jon,Qhorin,31
@@ -257,7 +257,7 @@ Meryn,Ilyn,5
 Robert,Renly,4
 Joffrey,Oberyn,4
 Samwell,Eddison,12
-Robert Arryn,Marillion,4
+Robert_Arryn,Marillion,4
 Rhaegar,Robert,6
 Tyrion,Janos,5
 Eddard,Catelyn,5

@@ -422,16 +422,13 @@ if __name__ == '__main__':
     args = sys.argv[1:]
     training_set = args[0]
     test_set = args[1]
-    missing_values_set = args[2]
+    imputed_values = args[2]
     network_file = args[3]
 
     structure_init(network_file, training_set)
     bn = BayesianNetwork('networks/'+network_file, training_set)
     local_search(bn, 1000, 'networks/'+network_file)
-    missing_value_imputation('networks/'+network_file, missing_values_set, training_set, 'imputed_values.csv')
-    df_test = pd.read_csv(test_set)
-    df_pred = pd.read_csv('imputed_values.csv')
-    print(accuracy(df_test, df_pred))
+    missing_value_imputation('networks/'+network_file, test_set, training_set, imputed_values)
 
     # Missing value imputation for all files
     """
