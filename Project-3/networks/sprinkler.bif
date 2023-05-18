@@ -14,15 +14,15 @@ probability ( Cloudy | Sprinkler ) {
   (0) 0.3197, 0.6803;
   (1) 0.8499, 0.1501;
 }
-probability ( Sprinkler | Rain ) {
-  (0) 0.5431, 0.4569;
-  (1) 0.8441, 0.1559;
+probability ( Sprinkler | Cloudy ) {
+  (0) 0.4674, 0.5326;
+  (1) 0.9136, 0.0864;
 }
-probability ( Rain | Cloudy ) {
-  (0) 0.8068, 0.1932;
-  (1) 0.1775, 0.8225;
+probability ( Rain | Wet_Grass ) {
+  (0) 0.8535, 0.1465;
+  (1) 0.2769, 0.7231;
 }
-probability ( Wet_Grass | Rain ) {
-  (0) 0.624, 0.376;
-  (1) 0.0984, 0.9016;
+probability ( Wet_Grass | Cloudy ) {
+  (0) 0.4674, 0.5326;
+  (1) 0.2422, 0.7578;
 }

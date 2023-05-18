@@ -6,7 +6,6 @@ import itertools
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.metrics import accuracy_score
 
 
 
@@ -238,10 +237,13 @@ class BayesianNetwork:
             score += math.log(proba)
         param = 0
         for v in self.variables:
+            count =1
             if len(self.variables[v].cpt.parents):
-                param += 4
+                for parents in self.variables[v].cpt.parents:
+                    count *= len(parents.values) 
+                param += len(self.variables[v].values)*count
             else:
-                param += 2
+                param += len(self.variables[v].values)
         return score - param
 
     def get_score(self):
@@ -333,8 +335,7 @@ def local_search(network, max_iter, network_name):
         target_var = random.choice([var for var in network.variables.keys() if var != selected])
         network.variables[selected].cpt.parents.append(network.variables[target_var])
         network.param_learning(selected, network.data_file)
-        score = network.get_alternative_score()
-        print(score > best_score)
+        score = network.get_score()
         if score > best_score and cnt < 3:
             if abs(score - best_score) < 0.001:
                 cnt += 1
@@ -351,7 +352,7 @@ def local_search(network, max_iter, network_name):
 
 # Example for how to read a BayesianNetwork
 
-def missing_value_imputation(network,test_file,file):
+def missing_value_imputation(network,test_file,file,result_name):
     """
     :param network: The best bayesian network
     :param test_file: the path to the file with missing values
@@ -392,12 +393,12 @@ def missing_value_imputation(network,test_file,file):
                 row[y2] = float(v2)
 
     df2 = pd.DataFrame(val)
-    df2.to_csv('datasets/asia/Imputed_values.csv', index=False)
+    df2.to_csv(result_name, index=False)
 
 def accuracy(df_A, df_B):
     # Vérifier si les DataFrames ont la même taille
     if df_A.shape != df_B.shape:
-        raise ValueError("Les DataFrames doivent avoir la même taille.")
+        raise ValueError("Different size error")
 
     total_rows = df_A.shape[0]
     num_identical_rows = 0
@@ -424,14 +425,17 @@ if __name__ == '__main__':
     print(bn.get_distrib_givenX('smoke', {'tub': 1, 'asia':1, 'lung':1, 'bronc':1, 'either':0, 'xray':1, 'dysp':0}))
     '''
 
-    """ structure_init('asia.bif', 'datasets/asia/train.csv')
-    bn = BayesianNetwork('networks/asia.bif',
-                         'datasets/asia/train.csv')
-    local_search(bn, 1000, 'networks/asia.bif')
+    """ files = ["alarm", "andes", "asia", "random", "sachs", "sprinkler", "water"]
 
-    #doing the missing value imputation according to the best bayesian network
-    missing_value_imputation(
-        'best_network.bif', 'datasets/asia/test_missing.csv', 'datasets/asia/train.csv') """
+    for f in files:
+        print(f"Now file {f}")
+        structure_init(f'{f}.bif', f'datasets/{f}/train.csv')
+        bn = BayesianNetwork(f'networks/{f}.bif',
+                             f'datasets/{f}/train.csv')
+        local_search(bn, 1000, f'networks/{f}.bif')
+
+        #doing the missing value imputation according to the best bayesian network
+        missing_value_imputation(f'networks/{f}.bif', f'datasets/{f}/test_missing.csv', f'datasets/{f}/train.csv', f'datasets/{f}/Imputed_values.csv') """
 
     files = ["alarm","andes","asia","random","sachs","sprinkler","water"]
     accs = {}
@@ -446,7 +450,12 @@ if __name__ == '__main__':
     values = list(accs.values())
 
     # Création du graphique en barres
-    plt.bar(keys, values)
+    plt.gca().set_facecolor('lightgray')
+
+    # Set the color of the x and y axes
+    plt.gca().spines['bottom'].set_color('black')
+    plt.gca().spines['left'].set_color('black')
+    plt.bar(keys, values,color='red')
     plt.xlabel('Files')
     plt.ylabel('Accuracy')
     plt.title('Bayesian network prediction accuracy')

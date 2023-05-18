@@ -106,9 +106,8 @@ probability ( CKNI_12_00 ) {
 probability ( CKNI_12_15 ) {
   table 0.21375, 0.2525, 0.53375;
 }
-probability ( CBODD_12_15 | CKND_12_15 ) {
-  (1) 0.0126, 0.9398, 0.0477;
-  (2) 0.0002, 0.8873, 0.1125;
+probability ( CBODD_12_15 ) {
+  table 0.936875, 0.011875, 0.05125;
 }
 probability ( CBODD_12_00 ) {
   table 1.0;
@@ -128,8 +127,8 @@ probability ( CKND_12_00 ) {
 probability ( CKNN_12_00 ) {
   table 1.0;
 }
-probability ( CNOD_12_15 | CKND_12_00 ) {
-  (1) 0.3706, 0.6294;
+probability ( CNOD_12_15 ) {
+  table 0.629375, 0.370625;
 }
 probability ( CNON_12_00 ) {
   table 1.0;
@@ -140,8 +139,11 @@ probability ( CBODN_12_15 ) {
 probability ( CKNN_12_15 ) {
   table 0.745, 0.255;
 }
-probability ( CNON_12_15 ) {
-  table 0.96, 0.04;
+probability ( CNON_12_15 | CBODD_12_30 ) {
+  (0) 0.9455, 0.0545;
+  (1) 0.9626, 0.0374;
+  (2) 0.9369, 0.0631;
+  (3) 0.9902, 0.0098;
 }
 probability ( C_NI_12_30 ) {
   table 0.209375, 0.363125, 0.269375, 0.158125;
@@ -149,10 +151,8 @@ probability ( C_NI_12_30 ) {
 probability ( CKNI_12_30 ) {
   table 0.205, 0.564375, 0.230625;
 }
-probability ( CBODD_12_30 | CBODD_12_15 ) {
-  (0) 0.9969, 0.001, 0.001, 0.001;
-  (1) 0.012, 0.9453, 0.0427, 0.0;
-  (2) 0.0002, 0.0124, 0.9627, 0.0246;
+probability ( CBODD_12_30 ) {
+  table 0.88625, 0.089375, 0.023125, 0.00125;
 }
 probability ( CKND_12_30 ) {
   table 0.113125, 0.886875;
@@ -172,27 +172,26 @@ probability ( CNON_12_30 ) {
 probability ( C_NI_12_45 ) {
   table 0.39875, 0.2025, 0.244375, 0.154375;
 }
-probability ( CKNI_12_45 | CNON_12_45 ) {
-  (0) 0.4975, 0.4975, 0.0049;
-  (1) 0.229, 0.5557, 0.2153;
-  (2) 0.2181, 0.6239, 0.158;
+probability ( CKNI_12_45 ) {
+  table 0.22875, 0.56125, 0.21;
 }
 probability ( CBODD_12_45 ) {
   table 0.823125, 0.1425, 0.02875, 0.005625;
 }
-probability ( CKND_12_45 | CKNI_12_30 ) {
-  (0) 0.9268, 0.0732;
-  (1) 0.8405, 0.1595;
-  (2) 0.7588, 0.2412;
+probability ( CKND_12_45 ) {
+  table 0.160625, 0.839375;
 }
-probability ( CNOD_12_45 ) {
-  table 0.260625, 0.739375;
+probability ( CNOD_12_45 | CKND_12_00 ) {
+  (1) 0.7394, 0.2606;
 }
 probability ( CBODN_12_45 ) {
   table 0.96625, 0.031875, 0.001875;
 }
-probability ( CKNN_12_45 ) {
-  table 0.464375, 0.535625;
+probability ( CKNN_12_45 | C_NI_12_00 ) {
+  (0) 0.5622, 0.4378;
+  (1) 0.5024, 0.4976;
+  (2) 0.5493, 0.4507;
+  (3) 0.531, 0.469;
 }
 probability ( CNON_12_45 ) {
   table 0.914375, 0.083125, 0.0025;
