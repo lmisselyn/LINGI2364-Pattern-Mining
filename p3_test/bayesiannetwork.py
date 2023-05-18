@@ -324,7 +324,6 @@ def local_search(network, max_iter, network_name):
     cnt = 0
 
     best_score = network.get_score()
-    print(best_score)
     network.write('best_network.bif')
     for i in range(max_iter):
         network = BayesianNetwork('best_network.bif', network.data_file)
@@ -345,7 +344,6 @@ def local_search(network, max_iter, network_name):
             network.write('best_network.bif')
         else:
             break
-    print(f"after {best_score}")
     best = BayesianNetwork('best_network.bif', network.data_file)
     best.write(network_name)
 
@@ -429,6 +427,7 @@ if __name__ == '__main__':
     bn = BayesianNetwork('networks/'+network_file, training_set)
     local_search(bn, 1000, 'networks/'+network_file)
     missing_value_imputation('networks/'+network_file, test_set, training_set, imputed_values)
+    print(accuracy(df_test, df_pred))
 
     # Missing value imputation for all files
     """
