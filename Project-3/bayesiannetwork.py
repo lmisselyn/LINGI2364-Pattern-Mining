@@ -431,6 +431,7 @@ if __name__ == '__main__':
     missing_value_imputation('networks/'+network_file, missing_values_set, training_set, 'imputed_values.csv')
     df_test = pd.read_csv(test_set)
     df_pred = pd.read_csv('imputed_values.csv')
+    df_pred = df_pred.astype('int64')
     print(accuracy(df_test, df_pred))
 
     # Missing value imputation for all files
